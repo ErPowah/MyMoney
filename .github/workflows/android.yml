@@ -1,0 +1,76 @@
+# Compila l'app per Android sui server di GitHub a ogni modifica del ramo "main"
+# e pubblica l'APK nella pagina "Releases" del repository, pronto da installare sul telefono.
+name: APK Android
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # permette di avviarla anche a mano dalla scheda "Actions"
+
+permissions:
+  contents: write # serve per creare la release con l'APK
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: microsoft
+          java-version: 17
+
+      - name: Installa .NET MAUI per Android
+        run: dotnet workload install maui-android
+
+      - name: Installa i componenti mancanti dell'SDK Android
+        run: >
+          dotnet build -t:InstallAndroidDependencies -f net10.0-android
+          -p:AndroidSdkDirectory="$ANDROID_HOME"
+          -p:AcceptAndroidSDKLicenses=True
+
+      # Chiave di firma di prova, conservata nella cache di GitHub:
+      # così ogni nuovo APK si installa sopra il precedente senza perdere i dati
+      - name: Recupera la chiave di firma
+        uses: actions/cache@v6
+        with:
+          path: ~/diariospese-test.keystore
+          key: diariospese-test-keystore
+
+      - name: Crea la chiave di firma (solo la prima volta)
+        run: |
+          if [ ! -f ~/diariospese-test.keystore ]; then
+            keytool -genkeypair -keystore ~/diariospese-test.keystore -alias diariospese \
+              -keyalg RSA -keysize 2048 -validity 10000 \
+              -storepass diariospese -keypass diariospese -dname "CN=Diario Spese"
+          fi
+
+      - name: Compila l'APK
+        run: >
+          dotnet publish -c Release -f net10.0-android -o publish
+          -p:AndroidSdkDirectory="$ANDROID_HOME"
+          -p:AndroidPackageFormats=apk
+          -p:AndroidKeyStore=true
+          -p:AndroidSigningKeyStore="$HOME/diariospese-test.keystore"
+          -p:AndroidSigningKeyAlias=diariospese
+          -p:AndroidSigningStorePass=diariospese
+          -p:AndroidSigningKeyPass=diariospese
+
+      - name: Pubblica l'APK nella pagina Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          APK=$(find publish bin -name '*-Signed.apk' | head -n 1)
+          test -n "$APK" || { echo "APK firmato non trovato"; exit 1; }
+          cp "$APK" DiarioSpese.apk
+          TAG="build-$GITHUB_RUN_NUMBER"
+          gh release create "$TAG" DiarioSpese.apk \
+            --target "$GITHUB_SHA" \
+            --title "Diario Spese – build $GITHUB_RUN_NUMBER" \
+            --notes "Dal telefono Android tocca DiarioSpese.apk qui sotto per scaricarla e installarla." \
+          || gh release upload "$TAG" DiarioSpese.apk --clobber

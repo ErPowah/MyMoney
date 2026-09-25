@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:models="clr-namespace:DiarioSpese.Models"
+             xmlns:vm="clr-namespace:DiarioSpese.ViewModels"
+             x:Class="DiarioSpese.Views.ElencoSpesePage"
+             x:DataType="vm:ElencoSpeseViewModel"
+             Title="Diario spese">
+
+    <Grid RowDefinitions="Auto,*,Auto"
+          Padding="16"
+          RowSpacing="12">
+
+        <!-- Riquadro con il totale del mese -->
+        <Border Padding="20,16"
+                StrokeThickness="0"
+                StrokeShape="RoundRectangle 16"
+                BackgroundColor="{StaticResource Primary}">
+            <VerticalStackLayout Spacing="4">
+                <Label Text="{Binding MeseCorrente, StringFormat='Totale di {0}'}"
+                       TextColor="White" />
+                <Label Text="{Binding TotaleMese, StringFormat='{0:C}'}"
+                       FontSize="32"
+                       FontAttributes="Bold"
+                       TextColor="White" />
+            </VerticalStackLayout>
+        </Border>
+
+        <!-- Elenco: diventa una RecyclerView su Android e una UICollectionView su iOS -->
+        <CollectionView Grid.Row="1"
+                        ItemsSource="{Binding Spese}">
+
+            <CollectionView.EmptyView>
+                <Label Text="Nessuna spesa registrata.&#10;Tocca «Nuova spesa» per iniziare."
+                       HorizontalTextAlignment="Center"
+                       Margin="0,40" />
+            </CollectionView.EmptyView>
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:Spesa">
+                    <SwipeView>
+                        <!-- Scorri la riga verso sinistra per eliminarla -->
+                        <SwipeView.RightItems>
+                            <SwipeItems>
+                                <SwipeItem Text="Elimina"
+                                           BackgroundColor="#D32F2F"
+                                           Command="{Binding EliminaCommand, Source={RelativeSource AncestorType={x:Type vm:ElencoSpeseViewModel}}, x:DataType=vm:ElencoSpeseViewModel}"
+                                           CommandParameter="{Binding .}" />
+                            </SwipeItems>
+                        </SwipeView.RightItems>
+
+                        <Grid ColumnDefinitions="*,Auto"
+                              ColumnSpacing="12"
+                              Padding="4,12"
+                              BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource OffBlack}}">
+                            <!-- Tocca la riga per modificarla -->
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding ModificaCommand, Source={RelativeSource AncestorType={x:Type vm:ElencoSpeseViewModel}}, x:DataType=vm:ElencoSpeseViewModel}"
+                                                      CommandParameter="{Binding .}" />
+                            </Grid.GestureRecognizers>
+
+                            <VerticalStackLayout Spacing="2">
+                                <Label Text="{Binding Descrizione}"
+                                       FontSize="16"
+                                       FontAttributes="Bold" />
+                                <Label TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray300}}">
+                                    <Label.FormattedText>
+                                        <FormattedString>
+                                            <Span Text="{Binding Data, StringFormat='{0:ddd d MMM yyyy}'}" />
+                                            <Span Text=" · " />
+                                            <Span Text="{Binding Categoria}" />
+                                        </FormattedString>
+                                    </Label.FormattedText>
+                                </Label>
+                            </VerticalStackLayout>
+
+                            <Label Grid.Column="1"
+                                   Text="{Binding Importo, StringFormat='{0:C}'}"
+                                   FontSize="16"
+                                   VerticalOptions="Center" />
+                        </Grid>
+                    </SwipeView>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <Button Grid.Row="2"
+                Text="+ Nuova spesa"
+                Command="{Binding NuovaSpesaCommand}" />
+    </Grid>
+</ContentPage>
