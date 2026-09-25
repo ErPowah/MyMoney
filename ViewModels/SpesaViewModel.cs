@@ -11,7 +11,7 @@ public partial class SpesaViewModel(SpeseDatabase database) : ObservableObject, 
 {
 	Spesa spesa = new();
 
-	public string[] Categorie { get; } = ["Alimentari", "Casa", "Trasporti", "Salute", "Svago", "Altro"];
+	public string[] Categorie { get; } = CategorieSpesa.Tutte;
 
 	[ObservableProperty]
 	public partial string Titolo { get; set; } = "Nuova spesa";

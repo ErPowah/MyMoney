@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:models="clr-namespace:DiarioSpese.Models"
              xmlns:vm="clr-namespace:DiarioSpese.ViewModels"
+             xmlns:views="clr-namespace:DiarioSpese.Views"
              x:Class="DiarioSpese.Views.ElencoSpesePage"
              x:DataType="vm:ElencoSpeseViewModel"
              Title="Diario spese">
@@ -49,36 +50,13 @@
                             </SwipeItems>
                         </SwipeView.RightItems>
 
-                        <Grid ColumnDefinitions="*,Auto"
-                              ColumnSpacing="12"
-                              Padding="4,12"
-                              BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource OffBlack}}">
+                        <views:RigaSpesaView BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource OffBlack}}">
                             <!-- Tocca la riga per modificarla -->
-                            <Grid.GestureRecognizers>
+                            <views:RigaSpesaView.GestureRecognizers>
                                 <TapGestureRecognizer Command="{Binding ModificaCommand, Source={RelativeSource AncestorType={x:Type vm:ElencoSpeseViewModel}}, x:DataType=vm:ElencoSpeseViewModel}"
                                                       CommandParameter="{Binding .}" />
-                            </Grid.GestureRecognizers>
-
-                            <VerticalStackLayout Spacing="2">
-                                <Label Text="{Binding Descrizione}"
-                                       FontSize="16"
-                                       FontAttributes="Bold" />
-                                <Label TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray300}}">
-                                    <Label.FormattedText>
-                                        <FormattedString>
-                                            <Span Text="{Binding Data, StringFormat='{0:ddd d MMM yyyy}'}" />
-                                            <Span Text=" · " />
-                                            <Span Text="{Binding Categoria}" />
-                                        </FormattedString>
-                                    </Label.FormattedText>
-                                </Label>
-                            </VerticalStackLayout>
-
-                            <Label Grid.Column="1"
-                                   Text="{Binding Importo, StringFormat='{0:C}'}"
-                                   FontSize="16"
-                                   VerticalOptions="Center" />
-                        </Grid>
+                            </views:RigaSpesaView.GestureRecognizers>
+                        </views:RigaSpesaView>
                     </SwipeView>
                 </DataTemplate>
             </CollectionView.ItemTemplate>

@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:models="clr-namespace:DiarioSpese.Models"
+             xmlns:vm="clr-namespace:DiarioSpese.ViewModels"
+             xmlns:views="clr-namespace:DiarioSpese.Views"
+             x:Class="DiarioSpese.Views.CronologiaPage"
+             x:DataType="vm:CronologiaViewModel"
+             Title="Cronologia">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16"
+                             Spacing="12">
+
+            <!-- Filtro per categoria: vale sia per il grafico sia per l'elenco -->
+            <Picker Title="Categoria"
+                    ItemsSource="{Binding Filtri}"
+                    SelectedItem="{Binding Filtro}" />
+
+            <Label Text="Totale mensile, ultimi 12 mesi. Tocca un mese per vederne le spese."
+                   TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray300}}" />
+
+            <!-- Grafico a colonne: 12 colonne della griglia, una per mese.
+                 Il mese scelto è viola, gli altri grigi. -->
+            <Grid HeightRequest="160"
+                  ColumnDefinitions="*,*,*,*,*,*,*,*,*,*,*,*"
+                  BindableLayout.ItemsSource="{Binding Colonne}">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="vm:ColonnaMese">
+                        <Grid Grid.Column="{Binding Indice}"
+                              RowDefinitions="*,1,Auto"
+                              BackgroundColor="Transparent"
+                              SemanticProperties.Description="{Binding Descrizione}">
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding SelezionaMeseCommand, Source={RelativeSource AncestorType={x:Type vm:CronologiaViewModel}}, x:DataType=vm:CronologiaViewModel}"
+                                                      CommandParameter="{Binding .}" />
+                            </Grid.GestureRecognizers>
+
+                            <AbsoluteLayout>
+                                <Border AbsoluteLayout.LayoutFlags="PositionProportional,HeightProportional"
+                                        AbsoluteLayout.LayoutBounds="{Binding Barra}"
+                                        StrokeThickness="0"
+                                        StrokeShape="RoundRectangle 4,4,0,0"
+                                        BackgroundColor="{AppThemeBinding Light={StaticResource Gray400}, Dark={StaticResource Gray500}}">
+                                    <Border.Triggers>
+                                        <DataTrigger TargetType="Border"
+                                                     Binding="{Binding Selezionata}"
+                                                     Value="True">
+                                            <Setter Property="BackgroundColor"
+                                                    Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource GraficoScuro}}" />
+                                        </DataTrigger>
+                                    </Border.Triggers>
+                                </Border>
+                            </AbsoluteLayout>
+
+                            <!-- Linea di base -->
+                            <BoxView Grid.Row="1"
+                                     BackgroundColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray600}}" />
+
+                            <Label Grid.Row="2"
+                                   Text="{Binding Etichetta}"
+                                   FontSize="11"
+                                   Margin="0,4,0,0"
+                                   HorizontalTextAlignment="Center"
+                                   TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray300}}">
+                                <Label.Triggers>
+                                    <DataTrigger TargetType="Label"
+                                                 Binding="{Binding Selezionata}"
+                                                 Value="True">
+                                        <Setter Property="FontAttributes" Value="Bold" />
+                                        <Setter Property="TextColor"
+                                                Value="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}" />
+                                    </DataTrigger>
+                                </Label.Triggers>
+                            </Label>
+                        </Grid>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </Grid>
+
+            <!-- Il mese scelto: totale ed elenco delle spese -->
+            <Grid ColumnDefinitions="*,Auto"
+                  Margin="0,12,0,0">
+                <Label Text="{Binding TitoloMese}"
+                       FontSize="20"
+                       FontFamily="OpenSansSemibold" />
+                <Label Grid.Column="1"
+                       Text="{Binding TotaleMese, StringFormat='{0:C}'}"
+                       FontSize="20"
+                       FontFamily="OpenSansSemibold" />
+            </Grid>
+
+            <Label Text="Nessuna spesa in questo mese."
+                   IsVisible="{Binding MeseVuoto}"
+                   TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray300}}" />
+
+            <VerticalStackLayout BindableLayout.ItemsSource="{Binding SpeseDelMese}">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="models:Spesa">
+                        <views:RigaSpesaView>
+                            <!-- Tocca la riga per modificarla -->
+                            <views:RigaSpesaView.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding ModificaCommand, Source={RelativeSource AncestorType={x:Type vm:CronologiaViewModel}}, x:DataType=vm:CronologiaViewModel}"
+                                                      CommandParameter="{Binding .}" />
+                            </views:RigaSpesaView.GestureRecognizers>
+                        </views:RigaSpesaView>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </VerticalStackLayout>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

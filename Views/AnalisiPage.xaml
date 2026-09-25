@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:DiarioSpese.ViewModels"
+             x:Class="DiarioSpese.Views.AnalisiPage"
+             x:DataType="vm:AnalisiViewModel"
+             Title="Analisi">
+
+    <ContentPage.Resources>
+        <!-- Pulsanti piccoli per i periodi più usati -->
+        <Style x:Key="Scorciatoia" TargetType="Button">
+            <Setter Property="FontFamily" Value="OpenSansRegular" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Padding" Value="14,8" />
+            <Setter Property="CornerRadius" Value="18" />
+            <Setter Property="MinimumHeightRequest" Value="40" />
+            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Secondary}, Dark={StaticResource Gray600}}" />
+            <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Tertiary}, Dark={StaticResource White}}" />
+        </Style>
+
+        <Style x:Key="Etichetta" TargetType="Label">
+            <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray300}}" />
+        </Style>
+    </ContentPage.Resources>
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16"
+                             Spacing="16">
+
+            <!-- Periodo: vale per tutti i risultati qui sotto -->
+            <ScrollView Orientation="Horizontal"
+                        HorizontalScrollBarVisibility="Never">
+                <HorizontalStackLayout Spacing="8">
+                    <Button Text="Questo mese"
+                            Style="{StaticResource Scorciatoia}"
+                            Command="{Binding PeriodoCommand}"
+                            CommandParameter="mese" />
+                    <Button Text="Mese scorso"
+                            Style="{StaticResource Scorciatoia}"
+                            Command="{Binding PeriodoCommand}"
+                            CommandParameter="mese-scorso" />
+                    <Button Text="Ultimi 30 giorni"
+                            Style="{StaticResource Scorciatoia}"
+                            Command="{Binding PeriodoCommand}"
+                            CommandParameter="30-giorni" />
+                    <Button Text="Quest'anno"
+                            Style="{StaticResource Scorciatoia}"
+                            Command="{Binding PeriodoCommand}"
+                            CommandParameter="anno" />
+                </HorizontalStackLayout>
+            </ScrollView>
+
+            <Grid ColumnDefinitions="*,*"
+                  ColumnSpacing="16">
+                <VerticalStackLayout>
+                    <Label Text="Dal" Style="{StaticResource Etichetta}" />
+                    <DatePicker Date="{Binding Dal}"
+                                Format="dd/MM/yyyy" />
+                </VerticalStackLayout>
+                <VerticalStackLayout Grid.Column="1">
+                    <Label Text="Al" Style="{StaticResource Etichetta}" />
+                    <DatePicker Date="{Binding Al}"
+                                Format="dd/MM/yyyy" />
+                </VerticalStackLayout>
+            </Grid>
+
+            <!-- Il numero principale della pagina: il totale speso nel periodo -->
+            <VerticalStackLayout IsVisible="{Binding PeriodoValido}">
+                <Label Text="Totale del periodo" Style="{StaticResource Etichetta}" />
+                <Label Text="{Binding Totale, StringFormat='{0:C}'}"
+                       FontSize="48"
+                       FontFamily="OpenSansSemibold" />
+            </VerticalStackLayout>
+
+            <Grid ColumnDefinitions="*,*"
+                  ColumnSpacing="16"
+                  IsVisible="{Binding PeriodoValido}">
+                <VerticalStackLayout>
+                    <Label Text="Spese" Style="{StaticResource Etichetta}" />
+                    <Label Text="{Binding NumeroSpese}"
+                           FontSize="20"
+                           FontFamily="OpenSansSemibold" />
+                </VerticalStackLayout>
+                <VerticalStackLayout Grid.Column="1">
+                    <Label Text="Media al giorno" Style="{StaticResource Etichetta}" />
+                    <Label Text="{Binding MediaGiornaliera, StringFormat='{0:C}'}"
+                           FontSize="20"
+                           FontFamily="OpenSansSemibold" />
+                </VerticalStackLayout>
+            </Grid>
+
+            <Label Text="{Binding Avviso}"
+                   IsVisible="{Binding HaAvviso}"
+                   Style="{StaticResource Etichetta}" />
+
+            <!-- Grafico a barre: una barra per categoria, lunga in proporzione alla categoria più alta.
+                 Importo e percentuale sono scritti accanto, così ogni valore si legge senza toccare nulla. -->
+            <VerticalStackLayout Spacing="14"
+                                 IsVisible="{Binding HaRisultati}">
+                <Label Text="Spese per categoria"
+                       FontSize="20"
+                       FontFamily="OpenSansSemibold"
+                       Margin="0,8,0,0" />
+
+                <VerticalStackLayout Spacing="14"
+                                     BindableLayout.ItemsSource="{Binding Categorie}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="vm:BarraCategoria">
+                            <Grid RowDefinitions="Auto,Auto"
+                                  ColumnDefinitions="*,Auto,48"
+                                  ColumnSpacing="8"
+                                  RowSpacing="6"
+                                  SemanticProperties.Description="{Binding Descrizione}">
+                                <Label Text="{Binding Categoria}" />
+                                <Label Grid.Column="1"
+                                       Text="{Binding Totale, StringFormat='{0:C}'}"
+                                       FontFamily="OpenSansSemibold" />
+                                <Label Grid.Column="2"
+                                       Text="{Binding Percentuale, StringFormat='{0:P0}'}"
+                                       HorizontalTextAlignment="End"
+                                       Style="{StaticResource Etichetta}" />
+
+                                <AbsoluteLayout Grid.Row="1"
+                                                Grid.ColumnSpan="3"
+                                                HeightRequest="12">
+                                    <Border AbsoluteLayout.LayoutFlags="WidthProportional"
+                                            AbsoluteLayout.LayoutBounds="{Binding Barra}"
+                                            StrokeThickness="0"
+                                            StrokeShape="RoundRectangle 0,4,0,4"
+                                            BackgroundColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource GraficoScuro}}" />
+                                </AbsoluteLayout>
+                            </Grid>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

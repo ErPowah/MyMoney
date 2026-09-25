@@ -50,10 +50,12 @@ jobs:
               -storepass diariospese -keypass diariospese -dname "CN=Diario Spese"
           fi
 
+      # ApplicationVersion cresce a ogni build: Android accetta la nuova versione come aggiornamento
       - name: Compila l'APK
         run: >
           dotnet publish -c Release -f net10.0-android -o publish
           -p:AndroidSdkDirectory="$ANDROID_HOME"
+          -p:ApplicationVersion=$GITHUB_RUN_NUMBER
           -p:AndroidPackageFormats=apk
           -p:AndroidKeyStore=true
           -p:AndroidSigningKeyStore="$HOME/diariospese-test.keystore"
@@ -74,3 +76,66 @@ jobs:
             --title "Diario Spese – build $GITHUB_RUN_NUMBER" \
             --notes "Dal telefono Android tocca DiarioSpese.apk qui sotto per scaricarla e installarla." \
           || gh release upload "$TAG" DiarioSpese.apk --clobber
+
+  # Avvia l'app su un emulatore Android con dati di esempio e salva le schermate
+  # nel ramo "anteprima" del repository: serve a controllare la grafica senza un telefono.
+  anteprima:
+    runs-on: ubuntu-latest
+    continue-on-error: true # se l'emulatore fa i capricci, l'APK pubblicato resta valido
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: microsoft
+          java-version: 17
+
+      - name: Installa .NET MAUI per Android
+        run: dotnet workload install maui-android
+
+      - name: Installa i componenti mancanti dell'SDK Android
+        run: >
+          dotnet build -t:InstallAndroidDependencies -f net10.0-android
+          -p:AndroidSdkDirectory="$ANDROID_HOME"
+          -p:AcceptAndroidSDKLicenses=True
+
+      # Versione Debug: solo così lo script può copiare i dati di esempio dentro l'app
+      - name: Compila la versione di prova
+        run: >
+          dotnet build -c Debug -f net10.0-android
+          -p:AndroidSdkDirectory="$ANDROID_HOME"
+          -p:EmbedAssembliesIntoApk=true
+          -p:RuntimeIdentifier=android-x64
+
+      - name: Abilita l'accelerazione hardware per l'emulatore
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Avvia l'emulatore e scatta le schermate
+        uses: reactivecircus/android-emulator-runner@v2.38.0
+        with:
+          api-level: 35
+          arch: x86_64
+          target: google_apis
+          profile: pixel_6
+          disable-animations: true
+          script: bash .github/scripts/anteprima.sh "$(find bin/Debug -name '*-Signed.apk' | head -n 1)"
+
+      - name: Salva le schermate nel ramo "anteprima"
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd anteprima
+          git init -q -b anteprima
+          git add -A
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -qm "Anteprima della build $GITHUB_RUN_NUMBER"
+          git push -qf "https://x-access-token:$GH_TOKEN@github.com/$GITHUB_REPOSITORY.git" anteprima

@@ -28,6 +28,19 @@ public class SpeseDatabase
 			.ToListAsync();
 	}
 
+	// Spese dal giorno "dal" al giorno "al", entrambi compresi
+	public async Task<List<Spesa>> LeggiSpeseAsync(DateTime dal, DateTime al)
+	{
+		var db = await ApriAsync();
+		var inizio = dal.Date;
+		var fine = al.Date.AddDays(1);
+		return await db.Table<Spesa>()
+			.Where(s => s.Data >= inizio && s.Data < fine)
+			.OrderByDescending(s => s.Data)
+			.ThenByDescending(s => s.Id)
+			.ToListAsync();
+	}
+
 	public async Task SalvaAsync(Spesa spesa)
 	{
 		var db = await ApriAsync();

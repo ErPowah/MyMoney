@@ -32,6 +32,10 @@ public static class MauiProgram
 		builder.Services.AddSingleton<ElencoSpesePage>();
 		builder.Services.AddTransient<SpesaViewModel>();
 		builder.Services.AddTransient<SpesaPage>();
+		builder.Services.AddSingleton<CronologiaViewModel>();
+		builder.Services.AddSingleton<CronologiaPage>();
+		builder.Services.AddSingleton<AnalisiViewModel>();
+		builder.Services.AddSingleton<AnalisiPage>();
 
 #if DEBUG
 		builder.Logging.AddDebug();

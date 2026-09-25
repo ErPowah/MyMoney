@@ -12,6 +12,9 @@
     <Color x:Key="SecondaryDarkText">#9880e5</Color>
     <Color x:Key="Tertiary">#2B0B98</Color>
 
+    <!-- Grafici in modalità scura: il viola Primary è troppo scuro sul fondo nero, PrimaryDark troppo chiaro -->
+    <Color x:Key="GraficoScuro">#8A70E6</Color>
+
     <Color x:Key="White">White</Color>
     <Color x:Key="Black">Black</Color>
     <Color x:Key="Magenta">#D600AA</Color>

@@ -37,11 +37,10 @@ public partial class ElencoSpeseViewModel(SpeseDatabase database) : ObservableOb
 	}
 
 	[RelayCommand]
-	Task NuovaSpesaAsync() => Shell.Current.GoToAsync(nameof(SpesaPage));
+	Task NuovaSpesaAsync() => SpesaPage.ApriAsync();
 
 	[RelayCommand]
-	Task ModificaAsync(Spesa spesa) =>
-		Shell.Current.GoToAsync(nameof(SpesaPage), new ShellNavigationQueryParameters { ["Spesa"] = spesa });
+	Task ModificaAsync(Spesa spesa) => SpesaPage.ApriAsync(spesa);
 
 	[RelayCommand]
 	async Task EliminaAsync(Spesa spesa)

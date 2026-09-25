@@ -6,9 +6,25 @@
     xmlns:views="clr-namespace:DiarioSpese.Views"
     Title="Diario spese">
 
-    <ShellContent
-        Title="Diario spese"
-        ContentTemplate="{DataTemplate views:ElencoSpesePage}"
-        Route="ElencoSpese" />
+    <!-- Le tre schede in basso. Le icone sono SVG in Resources/Images, convertite in PNG durante la compilazione -->
+    <TabBar>
+        <ShellContent
+            Title="Spese"
+            Icon="tab_spese.png"
+            ContentTemplate="{DataTemplate views:ElencoSpesePage}"
+            Route="ElencoSpese" />
+
+        <ShellContent
+            Title="Cronologia"
+            Icon="tab_cronologia.png"
+            ContentTemplate="{DataTemplate views:CronologiaPage}"
+            Route="Cronologia" />
+
+        <ShellContent
+            Title="Analisi"
+            Icon="tab_analisi.png"
+            ContentTemplate="{DataTemplate views:AnalisiPage}"
+            Route="Analisi" />
+    </TabBar>
 
 </Shell>
