@@ -14,6 +14,7 @@
             <Setter Property="Padding" Value="14,8" />
             <Setter Property="CornerRadius" Value="18" />
             <Setter Property="MinimumHeightRequest" Value="40" />
+            <Setter Property="Margin" Value="0,0,8,8" />
             <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Secondary}, Dark={StaticResource Gray600}}" />
             <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Tertiary}, Dark={StaticResource White}}" />
         </Style>
@@ -27,28 +28,26 @@
         <VerticalStackLayout Padding="16"
                              Spacing="16">
 
-            <!-- Periodo: vale per tutti i risultati qui sotto -->
-            <ScrollView Orientation="Horizontal"
-                        HorizontalScrollBarVisibility="Never">
-                <HorizontalStackLayout Spacing="8">
-                    <Button Text="Questo mese"
-                            Style="{StaticResource Scorciatoia}"
-                            Command="{Binding PeriodoCommand}"
-                            CommandParameter="mese" />
-                    <Button Text="Mese scorso"
-                            Style="{StaticResource Scorciatoia}"
-                            Command="{Binding PeriodoCommand}"
-                            CommandParameter="mese-scorso" />
-                    <Button Text="Ultimi 30 giorni"
-                            Style="{StaticResource Scorciatoia}"
-                            Command="{Binding PeriodoCommand}"
-                            CommandParameter="30-giorni" />
-                    <Button Text="Quest'anno"
-                            Style="{StaticResource Scorciatoia}"
-                            Command="{Binding PeriodoCommand}"
-                            CommandParameter="anno" />
-                </HorizontalStackLayout>
-            </ScrollView>
+            <!-- Periodo: vale per tutti i risultati qui sotto.
+                 FlexLayout manda a capo i pulsanti che non stanno sulla riga. -->
+            <FlexLayout Wrap="Wrap">
+                <Button Text="Questo mese"
+                        Style="{StaticResource Scorciatoia}"
+                        Command="{Binding PeriodoCommand}"
+                        CommandParameter="mese" />
+                <Button Text="Mese scorso"
+                        Style="{StaticResource Scorciatoia}"
+                        Command="{Binding PeriodoCommand}"
+                        CommandParameter="mese-scorso" />
+                <Button Text="Ultimi 30 giorni"
+                        Style="{StaticResource Scorciatoia}"
+                        Command="{Binding PeriodoCommand}"
+                        CommandParameter="30-giorni" />
+                <Button Text="Quest'anno"
+                        Style="{StaticResource Scorciatoia}"
+                        Command="{Binding PeriodoCommand}"
+                        CommandParameter="anno" />
+            </FlexLayout>
 
             <Grid ColumnDefinitions="*,*"
                   ColumnSpacing="16">

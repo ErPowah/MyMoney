@@ -13,9 +13,13 @@
                              Spacing="12">
 
             <!-- Filtro per categoria: vale sia per il grafico sia per l'elenco -->
-            <Picker Title="Categoria"
-                    ItemsSource="{Binding Filtri}"
-                    SelectedItem="{Binding Filtro}" />
+            <VerticalStackLayout>
+                <Label Text="Categoria"
+                       TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray300}}" />
+                <Picker Title="Categoria"
+                        ItemsSource="{Binding Filtri}"
+                        SelectedItem="{Binding Filtro}" />
+            </VerticalStackLayout>
 
             <Label Text="Totale mensile, ultimi 12 mesi. Tocca un mese per vederne le spese."
                    TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray300}}" />
