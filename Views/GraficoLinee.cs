@@ -58,9 +58,12 @@ public class GraficoLinee : GraphicsView, IDrawable
 		GestureRecognizers.Add(tocco);
 
 		// I colori cambiano tra tema chiaro e scuro: ridisegna quando cambia il tema
+		// (un metodo del controllo, perché MAUI tiene questo evento con un riferimento debole)
 		if (Application.Current is not null)
-			Application.Current.RequestedThemeChanged += (_, _) => Invalidate();
+			Application.Current.RequestedThemeChanged += TemaCambiato;
 	}
+
+	void TemaCambiato(object? sender, AppThemeChangedEventArgs e) => Invalidate();
 
 	public void Draw(ICanvas canvas, RectF area) =>
 		DisegnoLinee.Disegna(canvas, area, Serie, Etichette, IndiceSelezionato,

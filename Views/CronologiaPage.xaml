@@ -221,16 +221,14 @@
                        FontFamily="OpenSansSemibold" />
             </Grid>
 
-            <!-- Nel modo Linee: il valore di ogni linea visibile nel mese scelto, su due colonne -->
-            <FlexLayout Wrap="Wrap"
-                        IsVisible="{Binding ModalitaLinee}"
-                        BindableLayout.ItemsSource="{Binding SerieVisibili}">
+            <!-- Nel modo Linee: il valore di ogni linea visibile nel mese scelto, in una piccola tabella -->
+            <VerticalStackLayout Spacing="8"
+                                 IsVisible="{Binding ModalitaLinee}"
+                                 BindableLayout.ItemsSource="{Binding SerieVisibili}">
                 <BindableLayout.ItemTemplate>
                     <DataTemplate x:DataType="vm:SerieMensile">
-                        <Grid FlexLayout.Basis="50%"
-                              ColumnDefinitions="Auto,*"
-                              ColumnSpacing="6"
-                              Margin="0,0,0,6">
+                        <Grid ColumnDefinitions="Auto,*,Auto"
+                              ColumnSpacing="8">
                             <BoxView WidthRequest="14"
                                      HeightRequest="3"
                                      CornerRadius="1.5"
@@ -238,20 +236,14 @@
                                      Color="{Binding Colore}"
                                      BackgroundColor="Transparent" />
                             <Label Grid.Column="1"
-                                   FontSize="13">
-                                <Label.FormattedText>
-                                    <FormattedString>
-                                        <Span Text="{Binding Nome}" />
-                                        <Span Text="  " />
-                                        <Span Text="{Binding ValoreMese, StringFormat='{0:C}'}"
-                                              FontFamily="OpenSansSemibold" />
-                                    </FormattedString>
-                                </Label.FormattedText>
-                            </Label>
+                                   Text="{Binding Nome}" />
+                            <Label Grid.Column="2"
+                                   Text="{Binding ValoreMese, StringFormat='{0:C}'}"
+                                   FontFamily="OpenSansSemibold" />
                         </Grid>
                     </DataTemplate>
                 </BindableLayout.ItemTemplate>
-            </FlexLayout>
+            </VerticalStackLayout>
 
             <Label Text="Nessuna spesa in questo mese."
                    IsVisible="{Binding MeseVuoto}"

@@ -9,15 +9,16 @@ OUT=anteprima
 ERRORI=0
 mkdir -p "$OUT"
 
-# Coordinate del centro del controllo che mostra quel testo (con "limiti" come secondo argomento: x1 y1 x2 y2).
-# Se ce ne sono più di uno (per esempio il titolo e la scheda "Cronologia") prende quello più in basso.
+# Coordinate del centro del controllo che mostra quel testo.
+# Se ce ne sono più di uno (per esempio il titolo e la scheda "Cronologia") prende quello più in basso,
+# oppure quello più in alto con "alto" come secondo argomento. Con "limiti" stampa x1 y1 x2 y2.
 trova() {
   adb shell uiautomator dump /sdcard/ui.xml > /dev/null 2>&1
   adb shell cat /sdcard/ui.xml 2> /dev/null | python3 -c '
 import re, sys
 import xml.etree.ElementTree as ET
 testo = sys.argv[1]
-limiti = len(sys.argv) > 2 and sys.argv[2] == "limiti"
+modo = sys.argv[2] if len(sys.argv) > 2 else ""
 try:
     radice = ET.fromstring(sys.stdin.read())
 except ET.ParseError:
@@ -29,8 +30,8 @@ for nodo in radice.iter("node"):
         if x2 > x1 and y2 > y1:
             punti.append(((x1 + x2) // 2, (y1 + y2) // 2, x1, y1, x2, y2))
 if punti:
-    p = max(punti, key=lambda p: p[1])
-    print(*(p[2:] if limiti else p[:2]))
+    p = (min if modo == "alto" else max)(punti, key=lambda p: p[1])
+    print(*(p[2:] if modo == "limiti" else p[:2]))
 ' "$@"
 }
 
@@ -46,7 +47,7 @@ aspetta() {
 
 tocca() {
   local punto
-  punto=$(trova "$1")
+  punto=$(trova "$@")
   if [ -n "$punto" ]; then
     adb shell input tap $punto
     sleep 3
@@ -111,9 +112,10 @@ foto 03-cronologia-mese-scorso
 tocca "Linee"
 aspetta "Tocca una voce per mostrare o nascondere la sua linea. «Tutte le categorie» è la somma di tutte."
 foto 04-cronologia-linee
-tocca "Casa"
+# le voci della legenda sono sopra il grafico; sotto c'è la tabella con gli stessi nomi
+tocca "Casa" alto
 foto 05-cronologia-linee-senza-casa
-tocca "Tutte le categorie"
+tocca "Tutte le categorie" alto
 foto 06-cronologia-linee-tutte
 tocca_grafico 8
 foto 07-cronologia-linee-giugno
