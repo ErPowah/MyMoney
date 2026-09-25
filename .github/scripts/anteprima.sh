@@ -9,7 +9,7 @@ OUT=anteprima
 ERRORI=0
 mkdir -p "$OUT"
 
-# Coordinate del centro del controllo che mostra quel testo.
+# Coordinate del centro del controllo che mostra quel testo (con "limiti" come secondo argomento: x1 y1 x2 y2).
 # Se ce ne sono più di uno (per esempio il titolo e la scheda "Cronologia") prende quello più in basso.
 trova() {
   adb shell uiautomator dump /sdcard/ui.xml > /dev/null 2>&1
@@ -17,6 +17,7 @@ trova() {
 import re, sys
 import xml.etree.ElementTree as ET
 testo = sys.argv[1]
+limiti = len(sys.argv) > 2 and sys.argv[2] == "limiti"
 try:
     radice = ET.fromstring(sys.stdin.read())
 except ET.ParseError:
@@ -26,11 +27,11 @@ for nodo in radice.iter("node"):
     if testo in (nodo.get("text"), nodo.get("content-desc")):
         x1, y1, x2, y2 = map(int, re.findall(r"\d+", nodo.get("bounds")))
         if x2 > x1 and y2 > y1:
-            punti.append(((x1 + x2) // 2, (y1 + y2) // 2))
+            punti.append(((x1 + x2) // 2, (y1 + y2) // 2, x1, y1, x2, y2))
 if punti:
-    x, y = max(punti, key=lambda p: p[1])
-    print(x, y)
-' "$1"
+    p = max(punti, key=lambda p: p[1])
+    print(*(p[2:] if limiti else p[:2]))
+' "$@"
 }
 
 aspetta() {
@@ -53,6 +54,28 @@ tocca() {
     echo "::warning title=Anteprima::Non riesco a toccare \"$1\""
     ERRORI=$((ERRORI + 1))
   fi
+}
+
+# Tocca nel grafico a linee il mese con quell'indice (0 = il più vecchio, 11 = il mese corrente)
+tocca_grafico() {
+  local limiti densita punto
+  limiti=$(trova "Grafico a linee delle spese mensili" limiti)
+  densita=$(adb shell wm density | grep -oE '[0-9]+' | tail -n 1)
+  if [ -z "$limiti" ]; then
+    echo "::warning title=Anteprima::Non trovo il grafico a linee"
+    ERRORI=$((ERRORI + 1))
+    return
+  fi
+  punto=$(python3 -c '
+import sys
+x1, y1, x2, y2 = map(int, sys.argv[1].split())
+indice, scala = int(sys.argv[2]), int(sys.argv[3]) / 160
+larghezza = (x2 - x1) / scala
+x = 52 + (larghezza - 52 - 8) / 12 * (indice + 0.5)  # come DisegnoLinee.XMese
+print(int(x1 + x * scala), (y1 + y2) // 2)
+' "$limiti" "$1" "$densita")
+  adb shell input tap $punto
+  sleep 3
 }
 
 foto() {
@@ -84,27 +107,40 @@ MESE_SCORSO=$(python3 -c 'import datetime; m = "gen feb mar apr mag giu lug ago 
 tocca "$MESE_SCORSO"
 foto 03-cronologia-mese-scorso
 
+# Grafico a linee: tutte le categorie, poi senza "Casa", poi con la linea di tutte le categorie insieme
+tocca "Linee"
+aspetta "Tocca una voce per mostrare o nascondere la sua linea. «Tutte le categorie» è la somma di tutte."
+foto 04-cronologia-linee
+tocca "Casa"
+foto 05-cronologia-linee-senza-casa
+tocca "Tutte le categorie"
+foto 06-cronologia-linee-tutte
+tocca_grafico 8
+foto 07-cronologia-linee-giugno
+
 tocca "Analisi"
 aspetta "Totale del periodo"
-foto 04-analisi
+foto 08-analisi
 
 tocca "Quest'anno"
-foto 05-analisi-anno
+foto 09-analisi-anno
 
 tocca "Spese"
 tocca "+ Nuova spesa"
 aspetta "Salva"
-foto 06-nuova-spesa
+foto 10-nuova-spesa
 adb shell input keyevent KEYCODE_BACK
 sleep 3
 
 adb shell cmd uimode night yes
 sleep 4
-foto 07-spese-scuro
+foto 11-spese-scuro
 tocca "Cronologia"
-foto 08-cronologia-scuro
+foto 12-cronologia-linee-scuro
+tocca "Colonne"
+foto 13-cronologia-colonne-scuro
 tocca "Analisi"
-foto 09-analisi-scuro
+foto 14-analisi-scuro
 
 adb logcat -d > "$OUT/logcat.txt"
 adb logcat -d -b crash > "$OUT/crash.txt"

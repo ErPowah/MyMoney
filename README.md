@@ -8,7 +8,10 @@ Tre schede in basso:
   - **+ Nuova spesa**: aggiungi una spesa (descrizione, importo, data, categoria)
   - **Tocca una riga**: la modifichi
   - **Scorri una riga verso sinistra**: la elimini (solo su schermi touch; su Windows usa il pulsante *Elimina* nella pagina di modifica)
-- **Cronologia**: grafico a colonne con il totale di ciascuno degli ultimi 12 mesi, filtrabile per categoria. Tocca un mese per vederne il totale e l'elenco delle spese.
+- **Cronologia**: gli ultimi 12 mesi in due modi, a scelta con i pulsanti *Colonne* e *Linee*.
+  - *Colonne*: il totale di ogni mese, filtrabile per categoria.
+  - *Linee*: una linea per categoria, ognuna col suo colore; tocca una voce della legenda per mostrarla o nasconderla. La voce *Tutte le categorie* aggiunge la linea della somma di tutte.
+  - In entrambi i modi, tocca un mese per vederne il totale e l'elenco delle spese (nel modo *Linee*, anche il valore di ogni linea).
 - **Analisi**: scegli un periodo (dal… al…, oppure *Questo mese*, *Mese scorso*, *Ultimi 30 giorni*, *Quest'anno*) e vedi il totale speso, il numero di spese, la media al giorno e il grafico delle spese per categoria.
 
 I dati restano sul dispositivo, in un database SQLite locale.
@@ -55,14 +58,16 @@ Services/SpeseDatabase.cs         legge e scrive su SQLite (pacchetto sqlite-net
 Services/Statistiche.cs           totali per categoria e per mese
 ViewModels/ElencoSpeseViewModel   logica dell'elenco: caricamento, totale del mese, eliminazione
 ViewModels/SpesaViewModel         logica del modulo: controlli e salvataggio
-ViewModels/CronologiaViewModel    grafico dei 12 mesi, filtro per categoria, spese del mese scelto
+ViewModels/CronologiaViewModel    grafici dei 12 mesi (colonne e linee), filtri, spese del mese scelto
 ViewModels/AnalisiViewModel       periodo, totali e grafico per categoria
-ViewModels/ElementiGrafico.cs     colonne e barre dei grafici
+ViewModels/ElementiGrafico.cs     colonne, barre e linee dei grafici; colori fissi delle categorie
 Views/ElencoSpesePage.xaml        scheda Spese (interfaccia in XAML)
 Views/CronologiaPage.xaml         scheda Cronologia
 Views/AnalisiPage.xaml            scheda Analisi
 Views/SpesaPage.xaml              pagina nuova/modifica spesa
 Views/RigaSpesaView.xaml          una riga dell'elenco, usata da più pagine
+Views/GraficoLinee.cs             controllo del grafico a linee (GraphicsView)
+Views/DisegnoLinee.cs             il disegno del grafico a linee con Microsoft.Maui.Graphics
 AppShell.xaml                     le tre schede in basso e la navigazione
 MauiProgram.cs                    avvio: dependency injection e formati italiani (€, date)
 Platforms/                        codice specifico per ogni piattaforma (di solito non si tocca)
@@ -71,7 +76,7 @@ Resources/                        icona, schermata di avvio, font, colori e stil
 
 Le pagine XAML non contengono logica: si collegano al ViewModel con `{Binding ...}`. `[ObservableProperty]` e `[RelayCommand]` (dal pacchetto CommunityToolkit.Mvvm) generano il codice che tiene aggiornata l'interfaccia.
 
-I grafici non usano librerie esterne: ogni colonna o barra è un `Border` dentro un `AbsoluteLayout`, con dimensioni proporzionali al valore.
+I grafici non usano librerie esterne: ogni colonna o barra è un `Border` dentro un `AbsoluteLayout`, con dimensioni proporzionali al valore. Il grafico a linee invece è disegnato con `Microsoft.Maui.Graphics` dentro un `GraphicsView`.
 
 ## Idee per continuare
 

@@ -21,7 +21,10 @@
             <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Tertiary}, Dark={StaticResource White}}" />
         </Style>
 
+        <!-- Uno stile con nome sostituisce quello predefinito delle Label: per questo ripete anche il font -->
         <Style x:Key="Etichetta" TargetType="Label">
+            <Setter Property="FontFamily" Value="OpenSansRegular" />
+            <Setter Property="FontSize" Value="14" />
             <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray300}}" />
         </Style>
     </ContentPage.Resources>
