@@ -12,9 +12,9 @@ public record VoceCategoria(Categoria Categoria, int NumeroSpese, Color Colore)
 	public string Nome => Categoria.Nome;
 
 	public string Dettaglio =>
-		Nome == CategorieSpesa.Altro ? "Raccoglie anche le spese delle categorie eliminate"
-		: NumeroSpese == 1 ? "1 spesa"
-		: $"{NumeroSpese} spese";
+		Nome == CategorieSpesa.Altro ? $"{Conteggio} · raccoglie anche quelle delle categorie eliminate" : Conteggio;
+
+	string Conteggio => NumeroSpese == 1 ? "1 spesa" : $"{NumeroSpese} spese";
 
 	// "Altro" non si rinomina e non si elimina
 	public bool Modificabile => Nome != CategorieSpesa.Altro;
