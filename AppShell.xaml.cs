@@ -8,7 +8,8 @@ public partial class AppShell : Shell
 	{
 		InitializeComponent();
 
-		// Rende la pagina raggiungibile con Shell.Current.GoToAsync(nameof(SpesaPage))
+		// Rende le pagine raggiungibili con Shell.Current.GoToAsync(nameof(...))
 		Routing.RegisterRoute(nameof(SpesaPage), typeof(SpesaPage));
+		Routing.RegisterRoute(nameof(CategoriePage), typeof(CategoriePage));
 	}
 }

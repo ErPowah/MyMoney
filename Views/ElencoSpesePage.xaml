@@ -8,6 +8,11 @@
              x:DataType="vm:ElencoSpeseViewModel"
              Title="Diario spese">
 
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Categorie"
+                     Command="{Binding ApriCategorieCommand}" />
+    </ContentPage.ToolbarItems>
+
     <Grid RowDefinitions="Auto,*,Auto"
           Padding="16"
           RowSpacing="12">

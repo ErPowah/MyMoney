@@ -13,29 +13,32 @@ namespace DiarioSpese.ViewModels;
 // In entrambi i modi, toccando un mese sotto compaiono il suo totale e le sue spese.
 public partial class CronologiaViewModel(SpeseDatabase database) : ObservableObject
 {
-	public const string TutteLeCategorie = "Tutte le categorie";
+	public const string TutteLeCategorie = CategorieSpesa.TutteLeCategorie;
 	const int NumeroMesi = 12;
 
 	List<Spesa> spese = [];
+	List<(string Nome, int Colore)> categorieCaricate = [];
 	DateTime meseScelto = Statistiche.PrimoDelMese(DateTime.Today);
-
-	public string[] Filtri { get; } = [TutteLeCategorie, .. CategorieSpesa.Tutte];
+	bool temaScuro;
+	bool ricaricandoFiltri;
 
 	public ObservableCollection<ColonnaMese> Colonne { get; } = [];
 
 	public ObservableCollection<Spesa> SpeseDelMese { get; } = [];
 
+	// Voci del filtro delle colonne: "Tutte le categorie" più le categorie del database
+	[ObservableProperty]
+	public partial string[] Filtri { get; set; } = [TutteLeCategorie];
+
 	// Le linee: prima il totale (nascosto all'inizio), poi una per categoria, ognuna col suo colore fisso
-	public IReadOnlyList<SerieMensile> Serie { get; } =
-	[
-		new SerieMensile(TutteLeCategorie, PaletteCategorie.TotaleChiaro, PaletteCategorie.TotaleScuro) { Visibile = false },
-		.. CategorieSpesa.Tutte.Select((categoria, i) => new SerieMensile(categoria, PaletteCategorie.Chiaro(i), PaletteCategorie.Scuro(i)))
-	];
+	[ObservableProperty]
+	public partial IReadOnlyList<SerieMensile> Serie { get; set; } =
+		[new SerieMensile(TutteLeCategorie, PaletteCategorie.TotaleChiaro, PaletteCategorie.TotaleScuro) { Visibile = false }];
 
 	SerieMensile SerieTotale => Serie[0];
 
 	[ObservableProperty]
-	public partial string Filtro { get; set; } = TutteLeCategorie;
+	public partial string? Filtro { get; set; } = TutteLeCategorie;
 
 	[ObservableProperty]
 	[NotifyPropertyChangedFor(nameof(ModalitaColonne))]
@@ -67,19 +70,60 @@ public partial class CronologiaViewModel(SpeseDatabase database) : ObservableObj
 
 	public async Task CaricaAsync()
 	{
+		var categorie = await database.LeggiCategorieAsync();
 		spese = await database.LeggiSpeseAsync();
+		AggiornaCategorie(categorie);
 		Aggiorna();
 	}
 
 	// Colori della legenda: la pagina li aggiorna quando cambia il tema chiaro/scuro
 	public void ImpostaTema(bool scuro)
 	{
+		temaScuro = scuro;
 		foreach (var s in Serie)
 			s.Colore = scuro ? s.ColoreScuro : s.ColoreChiaro;
 	}
 
+	// Filtro e linee seguono le categorie del database, che puoi creare, rinominare ed eliminare
+	void AggiornaCategorie(List<Categoria> categorie)
+	{
+		var elenco = categorie.Select(c => (c.Nome, c.Colore)).ToList();
+		if (elenco.SequenceEqual(categorieCaricate))
+			return;
+		categorieCaricate = elenco;
+
+		// Una linea per categoria; quelle che c'erano già restano visibili o nascoste come prima
+		var visibili = Serie.ToDictionary(s => s.Nome, s => s.Visibile);
+		var serie = new List<SerieMensile> { SerieTotale };
+		foreach (var c in categorie)
+		{
+			var nuova = new SerieMensile(c.Nome, PaletteCategorie.Chiaro(c.Colore), PaletteCategorie.Scuro(c.Colore))
+			{
+				Visibile = visibili.GetValueOrDefault(c.Nome, true)
+			};
+			nuova.Colore = temaScuro ? nuova.ColoreScuro : nuova.ColoreChiaro;
+			serie.Add(nuova);
+		}
+		Serie = serie;
+
+		// Il Picker ricorda la posizione della voce scelta, non la voce: dopo aver cambiato l'elenco
+		// si torna a "Tutte le categorie" e poi si rimette il filtro di prima, se esiste ancora
+		var filtro = Filtro;
+		var nomi = categorie.Select(c => c.Nome).ToArray();
+		ricaricandoFiltri = true;
+		Filtri = [TutteLeCategorie, .. nomi];
+		Filtro = TutteLeCategorie;
+		if (filtro is not null && nomi.Contains(filtro))
+			Filtro = filtro;
+		ricaricandoFiltri = false;
+	}
+
 	// Cambiando categoria si aggiornano sia il grafico a colonne sia l'elenco
-	partial void OnFiltroChanged(string value) => Aggiorna();
+	partial void OnFiltroChanged(string? value)
+	{
+		if (!ricaricandoFiltri)
+			Aggiorna();
+	}
 
 	[RelayCommand]
 	void Modalita(string modalita)
@@ -117,7 +161,7 @@ public partial class CronologiaViewModel(SpeseDatabase database) : ObservableObj
 	Task ModificaAsync(Spesa spesa) => SpesaPage.ApriAsync(spesa);
 
 	IEnumerable<Spesa> SpeseFiltrate() =>
-		Filtro == TutteLeCategorie ? spese : spese.Where(s => s.Categoria == Filtro);
+		Filtro is null or TutteLeCategorie ? spese : spese.Where(s => s.Categoria == Filtro);
 
 	// Le spese che contano nel modo attuale: il filtro delle colonne, oppure le linee visibili
 	IEnumerable<Spesa> SpeseDelModo()

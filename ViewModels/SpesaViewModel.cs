@@ -11,7 +11,12 @@ public partial class SpesaViewModel(SpeseDatabase database) : ObservableObject, 
 {
 	Spesa spesa = new();
 
-	public string[] Categorie { get; } = CategorieSpesa.Tutte;
+	// La categoria da mostrare scelta quando l'elenco arriva dal database (quella della spesa da modificare)
+	string? categoriaVoluta;
+
+	// Le categorie del database, caricate quando si apre la pagina (vedi CaricaCategorieAsync)
+	[ObservableProperty]
+	public partial string[] Categorie { get; set; } = [];
 
 	[ObservableProperty]
 	public partial string Titolo { get; set; } = "Nuova spesa";
@@ -27,7 +32,7 @@ public partial class SpesaViewModel(SpeseDatabase database) : ObservableObject, 
 	public partial DateTime Data { get; set; } = DateTime.Today;
 
 	[ObservableProperty]
-	public partial string Categoria { get; set; } = "Alimentari";
+	public partial string? Categoria { get; set; }
 
 	[ObservableProperty]
 	public partial bool InModifica { get; set; }
@@ -42,9 +47,34 @@ public partial class SpesaViewModel(SpeseDatabase database) : ObservableObject, 
 			Descrizione = esistente.Descrizione;
 			Importo = esistente.Importo.ToString("0.00");
 			Data = esistente.Data;
-			Categoria = esistente.Categoria;
+			categoriaVoluta = esistente.Categoria;
 			InModifica = true;
 		}
+	}
+
+	public async Task CaricaCategorieAsync()
+	{
+		var nomi = (await database.LeggiCategorieAsync()).Select(c => c.Nome).ToArray();
+		var scelta = categoriaVoluta ?? Categoria;
+
+		// Prima si toglie la scelta, poi si cambia l'elenco, infine si sceglie la voce:
+		// il Picker cerca la voce scelta solo tra quelle che ha già, e ricorda la posizione, non la voce
+		Categoria = null;
+		Categorie = nomi;
+		Categoria = scelta is not null && nomi.Contains(scelta) ? scelta : nomi.FirstOrDefault();
+		categoriaVoluta = null;
+	}
+
+	// Crea una categoria senza lasciare il modulo e la sceglie subito
+	[RelayCommand]
+	async Task NuovaCategoriaAsync()
+	{
+		var nome = await CategorieViewModel.CreaConDialogoAsync(database);
+		if (nome is null)
+			return;
+
+		categoriaVoluta = nome;
+		await CaricaCategorieAsync();
 	}
 
 	[RelayCommand]
@@ -67,7 +97,7 @@ public partial class SpesaViewModel(SpeseDatabase database) : ObservableObject, 
 		spesa.Descrizione = Descrizione.Trim();
 		spesa.Importo = Math.Round(importo, 2);
 		spesa.Data = Data;
-		spesa.Categoria = Categoria;
+		spesa.Categoria = Categoria ?? CategorieSpesa.Altro;
 
 		await database.SalvaAsync(spesa);
 		await Shell.Current.GoToAsync(".."); // torna all'elenco

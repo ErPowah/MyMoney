@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:DiarioSpese.ViewModels"
+             x:Class="DiarioSpese.Views.CategoriePage"
+             x:DataType="vm:CategorieViewModel"
+             Title="Categorie">
+
+    <ContentPage.Resources>
+        <!-- Pulsanti piccoli accanto a ogni categoria -->
+        <Style x:Key="Azione" TargetType="Button">
+            <Setter Property="FontFamily" Value="OpenSansRegular" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Padding" Value="12,6" />
+            <Setter Property="CornerRadius" Value="16" />
+            <Setter Property="MinimumHeightRequest" Value="36" />
+            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Secondary}, Dark={StaticResource Gray600}}" />
+            <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Tertiary}, Dark={StaticResource White}}" />
+        </Style>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*,Auto"
+          Padding="16"
+          RowSpacing="12">
+
+        <Label Text="Il trattino colorato è il colore della categoria nel grafico a linee."
+               TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray300}}" />
+
+        <CollectionView Grid.Row="1"
+                        ItemsSource="{Binding Categorie}">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="vm:VoceCategoria">
+                    <Grid ColumnDefinitions="Auto,*,Auto"
+                          ColumnSpacing="12"
+                          Padding="0,10">
+                        <BoxView WidthRequest="14"
+                                 HeightRequest="3"
+                                 CornerRadius="1.5"
+                                 VerticalOptions="Center"
+                                 Color="{Binding Colore}"
+                                 BackgroundColor="Transparent" />
+
+                        <VerticalStackLayout Grid.Column="1"
+                                             VerticalOptions="Center">
+                            <Label Text="{Binding Nome}"
+                                   FontSize="16"
+                                   FontAttributes="Bold" />
+                            <Label Text="{Binding Dettaglio}"
+                                   TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray300}}" />
+                        </VerticalStackLayout>
+
+                        <HorizontalStackLayout Grid.Column="2"
+                                               Spacing="8"
+                                               VerticalOptions="Center"
+                                               IsVisible="{Binding Modificabile}">
+                            <Button Text="Rinomina"
+                                    Style="{StaticResource Azione}"
+                                    Command="{Binding RinominaCommand, Source={RelativeSource AncestorType={x:Type vm:CategorieViewModel}}, x:DataType=vm:CategorieViewModel}"
+                                    CommandParameter="{Binding .}" />
+                            <Button Text="Elimina"
+                                    Style="{StaticResource Azione}"
+                                    Command="{Binding EliminaCommand, Source={RelativeSource AncestorType={x:Type vm:CategorieViewModel}}, x:DataType=vm:CategorieViewModel}"
+                                    CommandParameter="{Binding .}" />
+                        </HorizontalStackLayout>
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <Button Grid.Row="2"
+                Text="+ Nuova categoria"
+                Command="{Binding NuovaCommand}" />
+    </Grid>
+</ContentPage>

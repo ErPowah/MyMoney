@@ -58,7 +58,7 @@ public partial class SerieMensile(string nome, Color coloreChiaro, Color coloreS
 	public partial decimal ValoreMese { get; set; }
 }
 
-// Colori delle linee, uno per posizione nell'elenco CategorieSpesa.Tutte, sempre nello stesso ordine.
+// Colori delle linee: ogni categoria ha una posizione fissa in questa palette (Categoria.Colore).
 // È una palette verificata per le varie forme di daltonismo, con tonalità diverse per il tema chiaro e scuro.
 public static class PaletteCategorie
 {
@@ -74,12 +74,14 @@ public static class PaletteCategorie
 		("#E34948", "#E66767"), // rosso
 	];
 
-	// Oltre l'ottava categoria i colori non si ripetono (si confonderebbero): le eventuali altre restano grigie
+	// Oltre l'ottava categoria i colori non si ripetono (si confonderebbero): le altre restano grigie (-1)
 	public static Color Chiaro(int posizione) =>
-		posizione < colori.Length ? Color.FromArgb(colori[posizione].Chiaro) : Color.FromArgb("#919191");
+		posizione >= 0 && posizione < colori.Length ? Color.FromArgb(colori[posizione].Chiaro) : Grigio;
 
 	public static Color Scuro(int posizione) =>
-		posizione < colori.Length ? Color.FromArgb(colori[posizione].Scuro) : Color.FromArgb("#919191");
+		posizione >= 0 && posizione < colori.Length ? Color.FromArgb(colori[posizione].Scuro) : Grigio;
+
+	static readonly Color Grigio = Color.FromArgb("#919191");
 
 	// Il totale di tutte le categorie è grigio, come il testo, per distinguerlo dalle categorie
 	public static readonly Color TotaleChiaro = Color.FromArgb("#404040");

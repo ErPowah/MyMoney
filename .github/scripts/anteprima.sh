@@ -9,23 +9,28 @@ OUT=anteprima
 ERRORI=0
 mkdir -p "$OUT"
 
-# Coordinate del centro del controllo che mostra quel testo.
-# Se ce ne sono più di uno (per esempio il titolo e la scheda "Cronologia") prende quello più in basso,
-# oppure quello più in alto con "alto" come secondo argomento. Con "limiti" stampa x1 y1 x2 y2.
+# Coordinate del centro del controllo che mostra quel testo (maiuscole e minuscole non contano;
+# "@EditText" indica invece il primo campo di testo). Se ce ne sono più di uno (per esempio il titolo
+# e la scheda "Cronologia") prende quello più in basso, oppure quello più in alto con "alto" come secondo
+# argomento. Con "limiti" stampa x1 y1 x2 y2.
 trova() {
   adb shell uiautomator dump /sdcard/ui.xml > /dev/null 2>&1
   adb shell cat /sdcard/ui.xml 2> /dev/null | python3 -c '
 import re, sys
 import xml.etree.ElementTree as ET
-testo = sys.argv[1]
+testo = sys.argv[1].casefold()
 modo = sys.argv[2] if len(sys.argv) > 2 else ""
+def corrisponde(nodo):
+    if testo.startswith("@"):
+        return nodo.get("class", "").casefold().endswith(testo[1:])
+    return testo in ((nodo.get("text") or "").casefold(), (nodo.get("content-desc") or "").casefold())
 try:
     radice = ET.fromstring(sys.stdin.read())
 except ET.ParseError:
     sys.exit()
 punti = []
 for nodo in radice.iter("node"):
-    if testo in (nodo.get("text"), nodo.get("content-desc")):
+    if corrisponde(nodo):
         x1, y1, x2, y2 = map(int, re.findall(r"\d+", nodo.get("bounds")))
         if x2 > x1 and y2 > y1:
             punti.append(((x1 + x2) // 2, (y1 + y2) // 2, x1, y1, x2, y2))
@@ -100,49 +105,76 @@ adb shell monkey -p $PKG -c android.intent.category.LAUNCHER 1
 aspetta "+ Nuova spesa" && sleep 3
 foto 01-spese
 
+# Categorie: la pagina, il dialogo per crearne una e l'elenco con la nuova categoria
+tocca "Categorie"
+aspetta "+ Nuova categoria"
+foto 02-categorie
+tocca "+ Nuova categoria"
+aspetta "Nuova categoria"
+tocca "@EditText"
+adb shell input text "Regali"
+sleep 1
+foto 03-nuova-categoria
+tocca "Crea"
+aspetta "Regali"
+foto 04-categorie-regali
+adb shell input keyevent KEYCODE_BACK
+sleep 3
+
 tocca "Cronologia"
 aspetta "Totale mensile, ultimi 12 mesi. Tocca un mese per vederne le spese."
-foto 02-cronologia
+foto 05-cronologia
 
 MESE_SCORSO=$(python3 -c 'import datetime; m = "gen feb mar apr mag giu lug ago set ott nov dic".split(); print(m[(datetime.date.today().month - 2) % 12])')
 tocca "$MESE_SCORSO"
-foto 03-cronologia-mese-scorso
+foto 06-cronologia-mese-scorso
 
 # Grafico a linee: tutte le categorie, poi senza "Casa", poi con la linea di tutte le categorie insieme
 tocca "Linee"
 aspetta "Tocca una voce per mostrare o nascondere la sua linea. «Tutte le categorie» è la somma di tutte."
-foto 04-cronologia-linee
+foto 07-cronologia-linee
 # le voci della legenda sono sopra il grafico; sotto c'è la tabella con gli stessi nomi
 tocca "Casa" alto
-foto 05-cronologia-linee-senza-casa
+foto 08-cronologia-linee-senza-casa
 tocca "Tutte le categorie" alto
-foto 06-cronologia-linee-tutte
+foto 09-cronologia-linee-tutte
 tocca_grafico 8
-foto 07-cronologia-linee-giugno
+foto 10-cronologia-linee-giugno
 
 tocca "Analisi"
 aspetta "Totale del periodo"
-foto 08-analisi
+foto 11-analisi
 
 tocca "Quest'anno"
-foto 09-analisi-anno
+foto 12-analisi-anno
 
 tocca "Spese"
 tocca "+ Nuova spesa"
 aspetta "Salva"
-foto 10-nuova-spesa
+foto 13-nuova-spesa
+tocca "+ Nuova categoria"
+aspetta "Nuova categoria"
+tocca "@EditText"
+adb shell input text "Animali"
+tocca "Crea"
+aspetta "Animali"
+foto 14-nuova-spesa-categoria-creata
 adb shell input keyevent KEYCODE_BACK
 sleep 3
 
 adb shell cmd uimode night yes
 sleep 4
-foto 11-spese-scuro
+foto 15-spese-scuro
 tocca "Cronologia"
-foto 12-cronologia-linee-scuro
+foto 16-cronologia-linee-scuro
 tocca "Colonne"
-foto 13-cronologia-colonne-scuro
+foto 17-cronologia-colonne-scuro
 tocca "Analisi"
-foto 14-analisi-scuro
+foto 18-analisi-scuro
+tocca "Spese"
+tocca "Categorie"
+aspetta "+ Nuova categoria"
+foto 19-categorie-scuro
 
 adb logcat -d > "$OUT/logcat.txt"
 adb logcat -d -b crash > "$OUT/crash.txt"

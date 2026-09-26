@@ -14,6 +14,8 @@ Tre schede in basso:
   - In entrambi i modi, tocca un mese per vederne il totale e l'elenco delle spese (nel modo *Linee*, anche il valore di ogni linea).
 - **Analisi**: scegli un periodo (dal… al…, oppure *Questo mese*, *Mese scorso*, *Ultimi 30 giorni*, *Quest'anno*) e vedi il totale speso, il numero di spese, la media al giorno e il grafico delle spese per categoria.
 
+**Categorie personalizzate**: dal pulsante *Categorie* in alto nella scheda Spese puoi crearne di nuove, rinominarle (le spese le seguono) ed eliminarle (le loro spese passano in *Altro*, che non si può eliminare). Nel modulo di una spesa c'è anche il pulsante *+ Nuova categoria*, per crearne una al volo. Ogni categoria riceve alla creazione un colore fisso per il grafico a linee; la palette ha 8 colori, e dalla nona categoria in poi le linee sono grigie per non confondersi.
+
 I dati restano sul dispositivo, in un database SQLite locale.
 
 ## Cosa serve
@@ -53,18 +55,21 @@ L'APK è firmato con una chiave di prova conservata nella cache di GitHub, così
 
 ```
 Models/Spesa.cs                   il dato: una spesa = una riga del database
-Models/CategorieSpesa.cs          l'elenco delle categorie
-Services/SpeseDatabase.cs         legge e scrive su SQLite (pacchetto sqlite-net-pcl)
+Models/Categoria.cs               una categoria = una riga della tabella Categoria
+Models/CategorieSpesa.cs          categorie iniziali e controllo dei nomi
+Services/SpeseDatabase.cs         legge e scrive spese e categorie su SQLite (pacchetto sqlite-net-pcl)
 Services/Statistiche.cs           totali per categoria e per mese
 ViewModels/ElencoSpeseViewModel   logica dell'elenco: caricamento, totale del mese, eliminazione
 ViewModels/SpesaViewModel         logica del modulo: controlli e salvataggio
 ViewModels/CronologiaViewModel    grafici dei 12 mesi (colonne e linee), filtri, spese del mese scelto
 ViewModels/AnalisiViewModel       periodo, totali e grafico per categoria
+ViewModels/CategorieViewModel     creare, rinominare ed eliminare le categorie
 ViewModels/ElementiGrafico.cs     colonne, barre e linee dei grafici; colori fissi delle categorie
 Views/ElencoSpesePage.xaml        scheda Spese (interfaccia in XAML)
 Views/CronologiaPage.xaml         scheda Cronologia
 Views/AnalisiPage.xaml            scheda Analisi
 Views/SpesaPage.xaml              pagina nuova/modifica spesa
+Views/CategoriePage.xaml          pagina Categorie
 Views/RigaSpesaView.xaml          una riga dell'elenco, usata da più pagine
 Views/GraficoLinee.cs             controllo del grafico a linee (GraphicsView)
 Views/DisegnoLinee.cs             il disegno del grafico a linee con Microsoft.Maui.Graphics

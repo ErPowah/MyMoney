@@ -36,6 +36,8 @@ public static class MauiProgram
 		builder.Services.AddSingleton<CronologiaPage>();
 		builder.Services.AddSingleton<AnalisiViewModel>();
 		builder.Services.AddSingleton<AnalisiPage>();
+		builder.Services.AddTransient<CategorieViewModel>();
+		builder.Services.AddTransient<CategoriePage>();
 
 #if DEBUG
 		builder.Logging.AddDebug();

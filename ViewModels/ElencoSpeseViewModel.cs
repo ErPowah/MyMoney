@@ -43,6 +43,9 @@ public partial class ElencoSpeseViewModel(SpeseDatabase database) : ObservableOb
 	Task ModificaAsync(Spesa spesa) => SpesaPage.ApriAsync(spesa);
 
 	[RelayCommand]
+	Task ApriCategorieAsync() => Shell.Current.GoToAsync(nameof(CategoriePage));
+
+	[RelayCommand]
 	async Task EliminaAsync(Spesa spesa)
 	{
 		await database.EliminaAsync(spesa);
