@@ -6,6 +6,11 @@
              x:DataType="vm:AnalisiViewModel"
              Title="Analisi">
 
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="⚙"
+                     Clicked="ImpostazioniClic" />
+    </ContentPage.ToolbarItems>
+
     <ContentPage.Resources>
         <!-- Pulsanti piccoli per i periodi più usati -->
         <Style x:Key="Scorciatoia" TargetType="Button">
@@ -17,8 +22,8 @@
             <Setter Property="Margin" Value="0,0,8,8" />
             <!-- Senza questo FlexLayout restringe i pulsanti (e ne taglia il testo) invece di mandarli a capo -->
             <Setter Property="FlexLayout.Shrink" Value="0" />
-            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Secondary}, Dark={StaticResource Gray600}}" />
-            <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Tertiary}, Dark={StaticResource White}}" />
+            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={DynamicResource Secondary}, Dark={StaticResource Gray600}}" />
+            <Setter Property="TextColor" Value="{AppThemeBinding Light={DynamicResource Tertiary}, Dark={StaticResource White}}" />
         </Style>
 
         <!-- Uno stile con nome sostituisce quello predefinito delle Label: per questo ripete anche il font -->
@@ -131,7 +136,7 @@
                                             AbsoluteLayout.LayoutBounds="{Binding Barra}"
                                             StrokeThickness="0"
                                             StrokeShape="RoundRectangle 0,4,0,4"
-                                            BackgroundColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource GraficoScuro}}" />
+                                            BackgroundColor="{AppThemeBinding Light={DynamicResource Primary}, Dark={DynamicResource GraficoScuro}}" />
                                 </AbsoluteLayout>
                             </Grid>
                         </DataTemplate>

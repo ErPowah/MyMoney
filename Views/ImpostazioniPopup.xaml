@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- La finestra che si apre sopra le altre toccando l'ingranaggio in alto a destra.
+     Si chiude toccando fuori, oppure col pulsante "Chiudi". -->
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:DiarioSpese.ViewModels"
+             x:Class="DiarioSpese.Views.ImpostazioniPopup"
+             x:DataType="vm:ImpostazioniViewModel">
+
+    <Border WidthRequest="320"
+            Padding="20"
+            StrokeThickness="0"
+            StrokeShape="RoundRectangle 20"
+            BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource OffBlack}}">
+
+        <VerticalStackLayout Spacing="16">
+            <Label Text="Impostazioni"
+                   FontSize="20"
+                   FontFamily="OpenSansSemibold" />
+
+            <VerticalStackLayout Spacing="8">
+                <Label Text="Colore del tema"
+                       TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray300}}" />
+
+                <!-- Un pallino per ogni tema pronto: toccalo per usarlo subito -->
+                <FlexLayout Wrap="Wrap">
+                    <BindableLayout.ItemsSource>
+                        <Binding Path="Preset" />
+                    </BindableLayout.ItemsSource>
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="vm:VoceTema">
+                            <VerticalStackLayout Margin="0,0,4,8"
+                                                 Spacing="4"
+                                                 FlexLayout.Shrink="0">
+                                <VerticalStackLayout.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding SelezionaPresetCommand, Source={RelativeSource AncestorType={x:Type vm:ImpostazioniViewModel}}, x:DataType=vm:ImpostazioniViewModel}"
+                                                          CommandParameter="{Binding .}" />
+                                </VerticalStackLayout.GestureRecognizers>
+                                <Border WidthRequest="40"
+                                        HeightRequest="40"
+                                        Padding="0"
+                                        StrokeThickness="0"
+                                        StrokeShape="RoundRectangle 20"
+                                        BackgroundColor="{Binding Colore}"
+                                        HorizontalOptions="Center" />
+                                <Label Text="{Binding Nome}"
+                                       FontSize="11"
+                                       HorizontalTextAlignment="Center"
+                                       TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray300}}" />
+                            </VerticalStackLayout>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </FlexLayout>
+            </VerticalStackLayout>
+
+            <VerticalStackLayout Spacing="8">
+                <Grid ColumnDefinitions="*,Auto">
+                    <Label Text="Crea il tuo colore"
+                           TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray300}}" />
+                    <!-- Anteprima dal vivo del colore mentre scorri lo slider -->
+                    <Border Grid.Column="1"
+                            WidthRequest="24"
+                            HeightRequest="24"
+                            Padding="0"
+                            StrokeThickness="0"
+                            StrokeShape="RoundRectangle 12"
+                            BackgroundColor="{Binding ColoreAnteprima}" />
+                </Grid>
+                <Slider Minimum="0"
+                        Maximum="360"
+                        Value="{Binding Tonalita}"
+                        SemanticProperties.Description="Tonalità del colore del tema" />
+            </VerticalStackLayout>
+
+            <Button x:Name="PulsanteChiudi"
+                    Text="Chiudi" />
+        </VerticalStackLayout>
+    </Border>
+</ContentView>

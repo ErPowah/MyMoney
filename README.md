@@ -16,6 +16,8 @@ Tre schede in basso:
 
 **Categorie personalizzate**: dal pulsante *Categorie* in alto nella scheda Spese puoi crearne di nuove, rinominarle (le spese le seguono) ed eliminarle (le loro spese passano in *Altro*, che non si può eliminare). Nel modulo di una spesa c'è anche il pulsante *+ Nuova categoria*, per crearne una al volo. Ogni categoria riceve alla creazione un colore fisso per il grafico a linee; la palette ha 8 colori, e dalla nona categoria in poi le linee sono grigie per non confondersi.
 
+**Impostazioni**: l'ingranaggio ⚙ in alto a destra (su Spese, Cronologia e Analisi) apre una finestra sopra la pagina, con il colore del tema dell'app. Puoi scegliere uno degli 8 temi pronti, oppure creartene uno tuo spostando lo slider della tonalità: il colore si applica subito, anche mentre lo trascini, e resta dopo aver chiuso la finestra e dopo aver richiuso l'app. Qualunque tonalità scegli, il testo bianco sopra i pulsanti resta leggibile: la luminosità si calcola da sola per garantirlo (vedi `Services/TemaService.cs`).
+
 I dati restano sul dispositivo, in un database SQLite locale.
 
 ## Cosa serve
@@ -59,17 +61,22 @@ Models/Categoria.cs               una categoria = una riga della tabella Categor
 Models/CategorieSpesa.cs          categorie iniziali e controllo dei nomi
 Services/SpeseDatabase.cs         legge e scrive spese e categorie su SQLite (pacchetto sqlite-net-pcl)
 Services/Statistiche.cs           totali per categoria e per mese
+Services/ColoreHsl.cs             calcoli su colori HSL e contrasto, usati da TemaService
+Services/TemaService.cs           costruisce e applica la palette del tema da una tonalità
+Models/TemaApp.cs                 gli 8 temi pronti, come tonalità
 ViewModels/ElencoSpeseViewModel   logica dell'elenco: caricamento, totale del mese, eliminazione
 ViewModels/SpesaViewModel         logica del modulo: controlli e salvataggio
 ViewModels/CronologiaViewModel    grafici dei 12 mesi (colonne e linee), filtri, spese del mese scelto
 ViewModels/AnalisiViewModel       periodo, totali e grafico per categoria
 ViewModels/CategorieViewModel     creare, rinominare ed eliminare le categorie
+ViewModels/ImpostazioniViewModel  temi pronti, tonalità personalizzata
 ViewModels/ElementiGrafico.cs     colonne, barre e linee dei grafici; colori fissi delle categorie
 Views/ElencoSpesePage.xaml        scheda Spese (interfaccia in XAML)
 Views/CronologiaPage.xaml         scheda Cronologia
 Views/AnalisiPage.xaml            scheda Analisi
 Views/SpesaPage.xaml              pagina nuova/modifica spesa
 Views/CategoriePage.xaml          pagina Categorie
+Views/ImpostazioniPopup.xaml      la finestra delle Impostazioni
 Views/RigaSpesaView.xaml          una riga dell'elenco, usata da più pagine
 Views/GraficoLinee.cs             controllo del grafico a linee (GraphicsView)
 Views/DisegnoLinee.cs             il disegno del grafico a linee con Microsoft.Maui.Graphics
@@ -82,6 +89,10 @@ Resources/                        icona, schermata di avvio, font, colori e stil
 Le pagine XAML non contengono logica: si collegano al ViewModel con `{Binding ...}`. `[ObservableProperty]` e `[RelayCommand]` (dal pacchetto CommunityToolkit.Mvvm) generano il codice che tiene aggiornata l'interfaccia.
 
 I grafici non usano librerie esterne: ogni colonna o barra è un `Border` dentro un `AbsoluteLayout`, con dimensioni proporzionali al valore. Il grafico a linee invece è disegnato con `Microsoft.Maui.Graphics` dentro un `GraphicsView`.
+
+La finestra delle Impostazioni usa `CommunityToolkit.Maui.Views.Popup` (pacchetto `CommunityToolkit.Maui`): si apre sopra la pagina con `this.ShowPopupAsync(...)` e si chiude con `Shell.Current.ClosePopupAsync()`.
+
+**Come funziona il tema**: tutti i colori "di marca" dell'app (il viola dei pulsanti e delle intestazioni) condividono la stessa tonalità e cambiano solo per saturazione e luminosità a seconda del ruolo (sfondo di un pulsante, testo su sfondo chiaro, colore nel tema scuro, ...). `TemaService` ricostruisce questi colori da una sola tonalità e li scrive come risorse dinamiche dell'app (`Application.Current.Resources["Primary"] = ...`): per questo, nello XAML, quei colori sono `{DynamicResource ...}` invece di `{StaticResource ...}` come gli altri, e ogni pagina che li usa si aggiorna da sola. La luminosità di "Primary" (che ha sempre testo bianco sopra) e di "Tertiary" (testo scuro su sfondo chiaro) non è fissa ma calcolata: per tonalità chiare come il giallo, a parità di luminosità dell'originale il testo sarebbe illeggibile, quindi `ColoreHsl.TrovaLuminosita` cerca la luminosità più alta (il colore più vivace) che mantenga un contrasto di almeno 4,5:1.
 
 ## Idee per continuare
 

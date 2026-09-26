@@ -9,6 +9,9 @@
              Title="Diario spese">
 
     <ContentPage.ToolbarItems>
+        <!-- L'ordine di dichiarazione conta: il primo finisce più vicino al bordo destro -->
+        <ToolbarItem Text="⚙"
+                     Clicked="ImpostazioniClic" />
         <ToolbarItem Text="Categorie"
                      Command="{Binding ApriCategorieCommand}" />
     </ContentPage.ToolbarItems>
@@ -21,7 +24,7 @@
         <Border Padding="20,16"
                 StrokeThickness="0"
                 StrokeShape="RoundRectangle 16"
-                BackgroundColor="{StaticResource Primary}">
+                BackgroundColor="{DynamicResource Primary}">
             <VerticalStackLayout Spacing="4">
                 <Label Text="{Binding MeseCorrente, StringFormat='Totale di {0}'}"
                        TextColor="White" />

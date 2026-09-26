@@ -176,6 +176,33 @@ tocca "Categorie"
 aspetta "+ Nuova categoria"
 foto 19-categorie-scuro
 
+# Impostazioni: l'ingranaggio in alto a destra apre la finestra con i temi pronti e lo slider
+# per crearne uno personalizzato. Qui, in scura, poi si sceglie "Verde" e resta in chiara,
+# per controllare che il colore si applichi ovunque (comprese le pagine già viste) e resti dopo la chiusura.
+tocca "Spese"
+tocca "⚙"
+aspetta "Impostazioni"
+foto 20-impostazioni-scuro
+tocca "Chiudi"
+sleep 2
+
+adb shell cmd uimode night no
+sleep 4
+tocca "⚙"
+aspetta "Impostazioni"
+foto 21-impostazioni
+tocca "Verde"
+sleep 1
+foto 22-impostazioni-verde
+tocca "Chiudi"
+sleep 2
+foto 23-spese-tema-verde
+tocca "Analisi"
+foto 24-analisi-tema-verde
+tocca "Categorie"
+aspetta "+ Nuova categoria"
+foto 25-categorie-tema-verde
+
 adb logcat -d > "$OUT/logcat.txt"
 adb logcat -d -b crash > "$OUT/crash.txt"
 if [ -s "$OUT/crash.txt" ]; then

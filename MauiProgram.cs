@@ -1,4 +1,5 @@
 using System.Globalization;
+using CommunityToolkit.Maui;
 using DiarioSpese.Services;
 using DiarioSpese.ViewModels;
 using DiarioSpese.Views;
@@ -26,8 +27,13 @@ public static class MauiProgram
 				fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
 			});
 
+#pragma warning disable CA1416 // il progetto compila solo per le piattaforme che UseMauiCommunityToolkit supporta
+		builder.UseMauiCommunityToolkit(); // per la finestra delle Impostazioni (CommunityToolkit.Maui.Views.Popup)
+#pragma warning restore CA1416
+
 		// Dependency injection: qui si dichiara come creare database, ViewModel e pagine
 		builder.Services.AddSingleton<SpeseDatabase>();
+		builder.Services.AddSingleton<TemaService>();
 		builder.Services.AddSingleton<ElencoSpeseViewModel>();
 		builder.Services.AddSingleton<ElencoSpesePage>();
 		builder.Services.AddTransient<SpesaViewModel>();
@@ -38,6 +44,8 @@ public static class MauiProgram
 		builder.Services.AddSingleton<AnalisiPage>();
 		builder.Services.AddTransient<CategorieViewModel>();
 		builder.Services.AddTransient<CategoriePage>();
+		builder.Services.AddSingleton<ImpostazioniViewModel>();
+		builder.Services.AddSingleton<ImpostazioniPopup>(); // condiviso dalle tre schede: sono le stesse impostazioni ovunque
 
 #if DEBUG
 		builder.Logging.AddDebug();

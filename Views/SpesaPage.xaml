@@ -34,8 +34,8 @@
                     Padding="14,6"
                     CornerRadius="16"
                     MinimumHeightRequest="36"
-                    BackgroundColor="{AppThemeBinding Light={StaticResource Secondary}, Dark={StaticResource Gray600}}"
-                    TextColor="{AppThemeBinding Light={StaticResource Tertiary}, Dark={StaticResource White}}" />
+                    BackgroundColor="{AppThemeBinding Light={DynamicResource Secondary}, Dark={StaticResource Gray600}}"
+                    TextColor="{AppThemeBinding Light={DynamicResource Tertiary}, Dark={StaticResource White}}" />
 
             <Button Text="Salva"
                     Command="{Binding SalvaCommand}"

@@ -30,9 +30,12 @@
     <Color x:Key="Gray900">#212121</Color>
     <Color x:Key="Gray950">#141414</Color>
 
-    <SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource Primary}"/>
-    <SolidColorBrush x:Key="SecondaryBrush" Color="{StaticResource Secondary}"/>
-    <SolidColorBrush x:Key="TertiaryBrush" Color="{StaticResource Tertiary}"/>
+    <!-- Primary, PrimaryDark, Secondary, SecondaryDarkText, Tertiary e GraficoScuro (poco sotto) sono
+         DynamicResource: TemaService (Services/TemaService.cs) li sovrascrive quando cambi il colore
+         del tema nelle Impostazioni, e ogni pagina che li usa si aggiorna da sola. -->
+    <SolidColorBrush x:Key="PrimaryBrush" Color="{DynamicResource Primary}"/>
+    <SolidColorBrush x:Key="SecondaryBrush" Color="{DynamicResource Secondary}"/>
+    <SolidColorBrush x:Key="TertiaryBrush" Color="{DynamicResource Tertiary}"/>
     <SolidColorBrush x:Key="WhiteBrush" Color="{StaticResource White}"/>
     <SolidColorBrush x:Key="BlackBrush" Color="{StaticResource Black}"/>
 
