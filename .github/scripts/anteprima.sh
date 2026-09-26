@@ -46,6 +46,26 @@ aspetta() {
     sleep 2
   done
   echo "::warning title=Anteprima::Non trovo \"$1\" sullo schermo"
+  # Diagnostica per il ramo "anteprima" (i log del job non si riescono a scaricare facilmente):
+  # cosa c'è davvero sullo schermo, quando la ricerca fallisce
+  {
+    echo "=== Non trovo \"$1\" ==="
+    adb shell uiautomator dump /sdcard/ui.xml > /dev/null 2>&1
+    adb shell cat /sdcard/ui.xml 2> /dev/null | python3 -c '
+import sys
+import xml.etree.ElementTree as ET
+try:
+    radice = ET.fromstring(sys.stdin.read())
+except ET.ParseError as e:
+    print("XML non leggibile:", e)
+    sys.exit()
+for nodo in radice.iter("node"):
+    testo, desc = nodo.get("text") or "", nodo.get("content-desc") or ""
+    if testo or desc:
+        print(f"  classe={nodo.get(\"class\")}  text={testo!r}  content-desc={desc!r}  bounds={nodo.get(\"bounds\")}")
+'
+    echo
+  } >> "$OUT/diagnostica.txt"
   ERRORI=$((ERRORI + 1))
   return 1
 }
