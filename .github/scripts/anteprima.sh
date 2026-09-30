@@ -4,7 +4,7 @@
 # Lo esegue il job "anteprima" di .github/workflows/android.yml.
 set -u
 APK="$1"
-PKG=it.diariospese.app.debug # la versione Debug ha un identificativo suo, vedi DiarioSpese.csproj
+PKG=it.diariospese.app
 OUT=anteprima
 ERRORI=0
 mkdir -p "$OUT"
@@ -40,16 +40,11 @@ if punti:
 ' "$@"
 }
 
-aspetta() {
-  for _ in $(seq 1 45); do
-    [ -n "$(trova "$1")" ] && return 0
-    sleep 2
-  done
-  echo "::warning title=Anteprima::Non trovo \"$1\" sullo schermo"
-  # Diagnostica per il ramo "anteprima" (i log del job non si riescono a scaricare facilmente):
-  # cosa c'è davvero sullo schermo, quando la ricerca fallisce
+# Per il ramo "anteprima" (i log del job non si riescono a scaricare facilmente): quando una ricerca
+# fallisce, salva in diagnostica.txt tutti i testi che ci sono davvero sullo schermo
+diagnostica() {
   {
-    echo "=== Non trovo \"$1\" ==="
+    echo "=== $1 ==="
     adb shell uiautomator dump /sdcard/ui.xml > /dev/null 2>&1
     adb shell cat /sdcard/ui.xml 2> /dev/null | python3 -c '
 import sys
@@ -62,10 +57,19 @@ except ET.ParseError as e:
 for nodo in radice.iter("node"):
     testo, desc = nodo.get("text") or "", nodo.get("content-desc") or ""
     if testo or desc:
-        print(f"  classe={nodo.get(\"class\")}  text={testo!r}  content-desc={desc!r}  bounds={nodo.get(\"bounds\")}")
-'
+        print("  classe=%s  text=%r  content-desc=%r  bounds=%s" % (nodo.get("class"), testo, desc, nodo.get("bounds")))
+' 2>&1
     echo
   } >> "$OUT/diagnostica.txt"
+}
+
+aspetta() {
+  for _ in $(seq 1 45); do
+    [ -n "$(trova "$1")" ] && return 0
+    sleep 2
+  done
+  echo "::warning title=Anteprima::Non trovo \"$1\" sullo schermo"
+  diagnostica "Non trovo \"$1\""
   ERRORI=$((ERRORI + 1))
   return 1
 }
@@ -78,6 +82,7 @@ tocca() {
     sleep 3
   else
     echo "::warning title=Anteprima::Non riesco a toccare \"$1\""
+    diagnostica "Non riesco a toccare \"$1\""
     ERRORI=$((ERRORI + 1))
   fi
 }
@@ -196,10 +201,12 @@ tocca "Categorie"
 aspetta "+ Nuova categoria"
 foto 19-categorie-scuro
 
-# Impostazioni: l'ingranaggio in alto a destra apre la finestra con i temi pronti e lo slider
-# per crearne uno personalizzato. Qui, in scura, poi si sceglie "Verde" e resta in chiara,
+# Impostazioni: l'ingranaggio in alto a destra apre la finestra con i temi pronti, lo slider
+# per crearne uno personalizzato e il backup. Qui, in scura, poi si sceglie "Verde" e resta in chiara,
 # per controllare che il colore si applichi ovunque (comprese le pagine già viste) e resti dopo la chiusura.
-tocca "Spese"
+# Si torna all'elenco con Indietro: toccare la scheda già selezionata non chiude la pagina Categorie.
+adb shell input keyevent KEYCODE_BACK
+aspetta "+ Nuova spesa"
 tocca "⚙"
 aspetta "Impostazioni"
 foto 20-impostazioni-scuro
@@ -219,9 +226,28 @@ sleep 2
 foto 23-spese-tema-verde
 tocca "Analisi"
 foto 24-analisi-tema-verde
+tocca "Spese"
 tocca "Categorie"
 aspetta "+ Nuova categoria"
 foto 25-categorie-tema-verde
+
+# Backup: la copia automatica in Download/DiarioSpese deve esserci, con tutte le spese di esempio
+# e le categorie create sopra (quindi aggiornata anche dopo le modifiche, non solo all'avvio)
+adb shell ls -l /sdcard/Download/DiarioSpese/ > "$OUT/backup.txt" 2>&1
+if adb pull "/sdcard/Download/DiarioSpese/Diario Spese - backup.db3" /tmp/backup.db3 > /dev/null 2>&1; then
+  python3 - /tmp/backup.db3 /tmp/spese.db3 >> "$OUT/backup.txt" <<'EOF' || { echo "::warning title=Anteprima::Il backup non contiene quello che dovrebbe, vedi backup.txt"; ERRORI=$((ERRORI + 1)); }
+import sqlite3, sys
+backup, demo = (sqlite3.connect(p) for p in sys.argv[1:3])
+spese = backup.execute("SELECT COUNT(*) FROM Spesa").fetchone()[0]
+attese = demo.execute("SELECT COUNT(*) FROM Spesa").fetchone()[0]
+categorie = {riga[0] for riga in backup.execute("SELECT Nome FROM Categoria")}
+print("Spese nel backup: %d (attese %d). Categorie: %s" % (spese, attese, ", ".join(sorted(categorie))))
+sys.exit(0 if spese == attese and {"Regali", "Animali"} <= categorie else 1)
+EOF
+else
+  echo "::warning title=Anteprima::Nessun backup in Download/DiarioSpese, vedi backup.txt"
+  ERRORI=$((ERRORI + 1))
+fi
 
 adb logcat -d > "$OUT/logcat.txt"
 adb logcat -d -b crash > "$OUT/crash.txt"

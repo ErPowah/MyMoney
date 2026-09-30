@@ -20,6 +20,10 @@ Tre schede in basso:
 
 I dati restano sul dispositivo, in un database SQLite locale.
 
+**Backup**: il database sta nella cartella privata dell'app, che Android cancella quando disinstalli l'app. Per questo, su Android 10 e successivi, l'app ne tiene una copia in **Download/DiarioSpese** (*Diario Spese - backup.db3*), aggiornata da sola all'avvio e dopo ogni modifica: quella cartella resta anche senza l'app. Dopo una reinstallazione, apri ⚙ → *Ripristina…* e scegli quel file. Sempre da ⚙, *Condividi* manda una copia dove vuoi (Drive, email, WhatsApp), utile anche se cambi telefono. Due accorgimenti:
+- l'app non salva mai una copia senza spese, così appena reinstallata non può rimpiazzare il backup buono;
+- dopo una reinstallazione Android non lascia all'app sovrascrivere il file vecchio, quindi ne crea uno nuovo accanto (*… backup (1).db3*). Ripristina il più recente.
+
 ## Cosa serve
 
 | Dove | Strumenti |
@@ -41,7 +45,7 @@ dotnet build -t:Run -f net10.0-ios         # simulatore iOS (solo su Mac)
 
 Per provarla sul tuo telefono Android: attiva *Opzioni sviluppatore → Debug USB* e collega il telefono (oppure, senza cavo, *Debug wireless* con `adb pair` e `adb connect`), poi sceglilo dal pulsante ▶ di Visual Studio.
 
-La versione Debug installata da Visual Studio si chiama **Spese DEV** ed è un'app separata da *Diario Spese* scaricata da GitHub, con dati suoi. Serve a proteggere le spese vere: le due versioni sono firmate con chiavi diverse, e Android non lascia installare una sopra l'altra se non disinstallando prima la vecchia, cosa che ne cancella i dati.
+Visual Studio e GitHub firmano l'app con la stessa chiave (vedi *Firma dell'APK* più sotto): F5 aggiorna l'app che hai già sul telefono, anche se l'avevi installata da Releases, senza toccare le tue spese.
 
 ## Provarla sul telefono Android, senza PC
 
@@ -53,7 +57,12 @@ A ogni modifica del ramo `main`, GitHub compila l'app da solo (vedi `.github/wor
 
 Nello stesso momento un secondo job avvia l'app su un emulatore Android con dati di esempio e salva le schermate di ogni scheda, chiare e scure, nel ramo `anteprima` del repository: servono a controllare la grafica senza un telefono.
 
-L'APK è firmato con una chiave di prova conservata nella cache di GitHub, così le versioni nuove si installano sopra le vecchie senza perdere i dati. Se passano più di 7 giorni senza nuove compilazioni, la cache scade e viene creata una chiave nuova. In quel caso disinstalla la vecchia app prima di installare la nuova.
+**Firma dell'APK.** Android accetta una versione nuova come aggiornamento, tenendo i dati, solo se è firmata con la stessa chiave di quella installata; altrimenti va prima disinstallata, e disinstallare cancella le spese. Per questo GitHub firma con la stessa chiave che Visual Studio usa sul tuo PC per le build Debug (`debug.keystore`), salvata una volta come segreto del repository:
+
+1. In PowerShell: `[Convert]::ToBase64String([IO.File]::ReadAllBytes("$env:LOCALAPPDATA\Xamarin\Mono for Android\debug.keystore")) | Set-Clipboard` (se il file non è lì, lo trova `Get-ChildItem $env:LOCALAPPDATA -Recurse -Filter debug.keystore`)
+2. Su GitHub: *Settings → Secrets and variables → Actions → New repository secret*, nome `CHIAVE_FIRMA`, incolla
+
+Senza il segreto, GitHub usa una chiave di prova conservata nella sua cache, che scade dopo 7 giorni senza compilazioni. Se cambi PC o chiave, rifai i due passi: la prima installazione con la chiave nuova richiede di disinstallare l'app, poi ripristini il backup (vedi *Backup*).
 
 ## Come è organizzato il codice (MVVM)
 
@@ -65,13 +74,15 @@ Services/SpeseDatabase.cs         legge e scrive spese e categorie su SQLite (pa
 Services/Statistiche.cs           totali per categoria e per mese
 Services/ColoreHsl.cs             calcoli su colori HSL e contrasto, usati da TemaService
 Services/TemaService.cs           costruisce e applica la palette del tema da una tonalità
+Services/BackupService.cs         backup automatico, copia da condividere, ripristino
+Platforms/Android/CartellaBackup  scrive la copia in Download/DiarioSpese (MediaStore)
 Models/TemaApp.cs                 gli 8 temi pronti, come tonalità
 ViewModels/ElencoSpeseViewModel   logica dell'elenco: caricamento, totale del mese, eliminazione
 ViewModels/SpesaViewModel         logica del modulo: controlli e salvataggio
 ViewModels/CronologiaViewModel    grafici dei 12 mesi (colonne e linee), filtri, spese del mese scelto
 ViewModels/AnalisiViewModel       periodo, totali e grafico per categoria
 ViewModels/CategorieViewModel     creare, rinominare ed eliminare le categorie
-ViewModels/ImpostazioniViewModel  temi pronti, tonalità personalizzata
+ViewModels/ImpostazioniViewModel  temi pronti, tonalità personalizzata, backup
 ViewModels/ElementiGrafico.cs     colonne, barre e linee dei grafici; colori fissi delle categorie
 Views/ElencoSpesePage.xaml        scheda Spese (interfaccia in XAML)
 Views/CronologiaPage.xaml         scheda Cronologia

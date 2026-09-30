@@ -7,6 +7,19 @@
              x:Class="DiarioSpese.Views.ImpostazioniPopup"
              x:DataType="vm:ImpostazioniViewModel">
 
+    <ContentView.Resources>
+        <!-- Pulsanti secondari, come Rinomina ed Elimina nella pagina Categorie -->
+        <Style x:Key="Secondario" TargetType="Button">
+            <Setter Property="FontFamily" Value="OpenSansRegular" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Padding" Value="12,6" />
+            <Setter Property="CornerRadius" Value="16" />
+            <Setter Property="MinimumHeightRequest" Value="36" />
+            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={DynamicResource Secondary}, Dark={StaticResource Gray600}}" />
+            <Setter Property="TextColor" Value="{AppThemeBinding Light={DynamicResource Tertiary}, Dark={StaticResource White}}" />
+        </Style>
+    </ContentView.Resources>
+
     <Border WidthRequest="320"
             Padding="20"
             StrokeThickness="0"
@@ -70,6 +83,22 @@
                         Maximum="360"
                         Value="{Binding Tonalita}"
                         SemanticProperties.Description="Tonalità del colore del tema" />
+            </VerticalStackLayout>
+
+            <!-- Il backup resta anche se l'app viene disinstallata: da qui si riprende -->
+            <VerticalStackLayout Spacing="8">
+                <Label Text="Backup delle spese"
+                       TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray300}}" />
+                <Label Text="{Binding StatoBackup}"
+                       FontSize="13" />
+                <HorizontalStackLayout Spacing="8">
+                    <Button Text="Condividi"
+                            Style="{StaticResource Secondario}"
+                            Command="{Binding CondividiBackupCommand}" />
+                    <Button Text="Ripristina…"
+                            Style="{StaticResource Secondario}"
+                            Command="{Binding RipristinaBackupCommand}" />
+                </HorizontalStackLayout>
             </VerticalStackLayout>
 
             <Button x:Name="PulsanteChiudi"

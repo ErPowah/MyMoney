@@ -10,5 +10,6 @@ public partial class ImpostazioniPopup : ContentView
 		InitializeComponent();
 		BindingContext = viewModel;
 		PulsanteChiudi.Clicked += async (_, _) => await Shell.Current.ClosePopupAsync();
+		Loaded += (_, _) => viewModel.AggiornaStatoBackup(); // a ogni apertura: l'ultimo backup può essere cambiato
 	}
 }

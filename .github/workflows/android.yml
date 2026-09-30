@@ -13,6 +13,8 @@ permissions:
 jobs:
   apk:
     runs-on: ubuntu-latest
+    env:
+      CHIAVE_FIRMA: ${{ secrets.CHIAVE_FIRMA }}
     steps:
       - uses: actions/checkout@v7
 
@@ -34,20 +36,34 @@ jobs:
           -p:AndroidSdkDirectory="$ANDROID_HOME"
           -p:AcceptAndroidSDKLicenses=True
 
-      # Chiave di firma di prova, conservata nella cache di GitHub:
-      # così ogni nuovo APK si installa sopra il precedente senza perdere i dati
-      - name: Recupera la chiave di firma
+      # Android installa una versione nuova sopra la vecchia, tenendo i dati, solo se la chiave di firma è la stessa.
+      # Con il segreto CHIAVE_FIRMA è il debug.keystore del PC, con cui firma anche Visual Studio (vedi README);
+      # senza, una chiave di prova conservata nella cache di GitHub
+      - name: Recupera la chiave di prova
+        if: env.CHIAVE_FIRMA == ''
         uses: actions/cache@v6
         with:
           path: ~/diariospese-test.keystore
           key: diariospese-test-keystore
 
-      - name: Crea la chiave di firma (solo la prima volta)
+      - name: Prepara la chiave di firma
         run: |
-          if [ ! -f ~/diariospese-test.keystore ]; then
-            keytool -genkeypair -keystore ~/diariospese-test.keystore -alias diariospese \
-              -keyalg RSA -keysize 2048 -validity 10000 \
-              -storepass diariospese -keypass diariospese -dname "CN=Diario Spese"
+          if [ -n "$CHIAVE_FIRMA" ]; then
+            if ! printf '%s' "$CHIAVE_FIRMA" | tr -d ' \r\n' | base64 -d > ~/firma.keystore 2> /dev/null ||
+               ! keytool -list -keystore ~/firma.keystore -storepass android -alias androiddebugkey > /dev/null; then
+              echo "::error title=Firma::Il segreto CHIAVE_FIRMA non contiene un debug.keystore valido (alias androiddebugkey, password android)"
+              exit 1
+            fi
+            { echo "FIRMA_FILE=$HOME/firma.keystore"; echo "FIRMA_ALIAS=androiddebugkey"; echo "FIRMA_PASSWORD=android"; } >> "$GITHUB_ENV"
+            echo "Firma con la chiave del segreto CHIAVE_FIRMA"
+          else
+            if [ ! -f ~/diariospese-test.keystore ]; then
+              keytool -genkeypair -keystore ~/diariospese-test.keystore -alias diariospese \
+                -keyalg RSA -keysize 2048 -validity 10000 \
+                -storepass diariospese -keypass diariospese -dname "CN=Diario Spese"
+            fi
+            { echo "FIRMA_FILE=$HOME/diariospese-test.keystore"; echo "FIRMA_ALIAS=diariospese"; echo "FIRMA_PASSWORD=diariospese"; } >> "$GITHUB_ENV"
+            echo "::notice title=Firma::Firma con la chiave di prova in cache: crea il segreto CHIAVE_FIRMA (vedi README)"
           fi
 
       # ApplicationVersion cresce a ogni build: Android accetta la nuova versione come aggiornamento
@@ -58,10 +74,10 @@ jobs:
           -p:ApplicationVersion=$GITHUB_RUN_NUMBER
           -p:AndroidPackageFormats=apk
           -p:AndroidKeyStore=true
-          -p:AndroidSigningKeyStore="$HOME/diariospese-test.keystore"
-          -p:AndroidSigningKeyAlias=diariospese
-          -p:AndroidSigningStorePass=diariospese
-          -p:AndroidSigningKeyPass=diariospese
+          -p:AndroidSigningKeyStore="$FIRMA_FILE"
+          -p:AndroidSigningKeyAlias=$FIRMA_ALIAS
+          -p:AndroidSigningStorePass=$FIRMA_PASSWORD
+          -p:AndroidSigningKeyPass=$FIRMA_PASSWORD
 
       - name: Pubblica l'APK nella pagina Releases
         env:

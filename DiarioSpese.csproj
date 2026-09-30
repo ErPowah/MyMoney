@@ -33,10 +33,6 @@
 		<!-- App Identifier -->
 		<ApplicationId>it.diariospese.app</ApplicationId>
 
-		<!-- Debug (F5 da Visual Studio) è un'app a parte: firmata con un'altra chiave, sostituirebbe quella di GitHub cancellandone i dati -->
-		<ApplicationTitle Condition="'$(Configuration)' == 'Debug'">Spese DEV</ApplicationTitle>
-		<ApplicationId Condition="'$(Configuration)' == 'Debug'">it.diariospese.app.debug</ApplicationId>
-
 		<!-- Versions -->
 		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
 		<ApplicationVersion>1</ApplicationVersion>

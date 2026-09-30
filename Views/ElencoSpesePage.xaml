@@ -40,9 +40,15 @@
                         ItemsSource="{Binding Spese}">
 
             <CollectionView.EmptyView>
-                <Label Text="Nessuna spesa registrata.&#10;Tocca «Nuova spesa» per iniziare."
-                       HorizontalTextAlignment="Center"
-                       Margin="0,40" />
+                <VerticalStackLayout Margin="0,40"
+                                     Spacing="16">
+                    <Label Text="Nessuna spesa registrata.&#10;Tocca «Nuova spesa» per iniziare."
+                           HorizontalTextAlignment="Center" />
+                    <Label Text="Hai reinstallato l'app? Le spese di prima si ripristinano da ⚙ → «Ripristina…»."
+                           FontSize="13"
+                           HorizontalTextAlignment="Center"
+                           TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray300}}" />
+                </VerticalStackLayout>
             </CollectionView.EmptyView>
 
             <CollectionView.ItemTemplate>

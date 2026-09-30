@@ -9,8 +9,16 @@ namespace DiarioSpese.ViewModels;
 
 // Logica della pagina principale. Non conosce i controlli grafici: la pagina XAML si "aggancia"
 // alle sue proprietà e ai suoi comandi tramite i {Binding}.
-public partial class ElencoSpeseViewModel(SpeseDatabase database) : ObservableObject
+public partial class ElencoSpeseViewModel : ObservableObject
 {
+	readonly SpeseDatabase database;
+
+	public ElencoSpeseViewModel(SpeseDatabase database)
+	{
+		this.database = database;
+		database.Ripristinato += () => _ = CaricaAsync();
+	}
+
 	// ObservableCollection avvisa da sola la CollectionView quando aggiungi o togli elementi
 	public ObservableCollection<Spesa> Spese { get; } = [];
 

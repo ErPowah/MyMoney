@@ -19,12 +19,20 @@ public class SpeseDatabase
 	// Nei test: un file a scelta
 	public SpeseDatabase(string percorso) => percorsoFile = percorso;
 
+	// Dopo ogni modifica di spese o categorie: tiene aggiornato il backup (BackupService)
+	public event Action? Modificato;
+
+	// Dopo il ripristino di un backup: le schede ricaricano i dati
+	public event Action? Ripristinato;
+
+	string Percorso => percorsoFile ?? Path.Combine(FileSystem.AppDataDirectory, "spese.db3");
+
 	// La prima chiamata apre il database e lo prepara; le successive riusano la stessa apertura
 	Task<SQLiteAsyncConnection> ApriAsync() => apertura ??= PreparaAsync();
 
 	async Task<SQLiteAsyncConnection> PreparaAsync()
 	{
-		var db = new SQLiteAsyncConnection(percorsoFile ?? Path.Combine(FileSystem.AppDataDirectory, "spese.db3"));
+		var db = new SQLiteAsyncConnection(Percorso);
 		await db.CreateTableAsync<Spesa>(); // crea le tabelle solo se non esistono
 		await db.CreateTableAsync<Categoria>();
 
@@ -80,12 +88,14 @@ public class SpeseDatabase
 			await db.InsertAsync(spesa); // nuova spesa: l'Id lo assegna SQLite
 		else
 			await db.UpdateAsync(spesa);
+		Modificato?.Invoke();
 	}
 
 	public async Task EliminaAsync(Spesa spesa)
 	{
 		var db = await ApriAsync();
 		await db.DeleteAsync(spesa);
+		Modificato?.Invoke();
 	}
 
 	// ----- Categorie -----
@@ -105,6 +115,7 @@ public class SpeseDatabase
 		var esistenti = await db.Table<Categoria>().ToListAsync();
 		var categoria = new Categoria { Nome = nome.Trim(), Colore = PrimoColoreLibero(esistenti) };
 		await db.InsertAsync(categoria);
+		Modificato?.Invoke();
 		return categoria;
 	}
 
@@ -123,6 +134,7 @@ public class SpeseDatabase
 			categoria.Nome = nuovoNome;
 			t.Update(categoria);
 		});
+		Modificato?.Invoke();
 	}
 
 	// Elimina la categoria; le sue spese passano in "Altro"
@@ -137,6 +149,50 @@ public class SpeseDatabase
 			t.Execute("UPDATE Spesa SET Categoria = ? WHERE Categoria = ?", CategorieSpesa.Altro, categoria.Nome);
 			t.Delete(categoria);
 		});
+		Modificato?.Invoke();
+	}
+
+	// ----- Backup -----
+
+	public async Task<int> ContaSpeseAsync()
+	{
+		var db = await ApriAsync();
+		return await db.Table<Spesa>().CountAsync();
+	}
+
+	// Copia completa e coerente del database, anche mentre è aperto: VACUUM INTO scrive un file nuovo
+	public async Task CopiaInAsync(string destinazione)
+	{
+		var db = await ApriAsync();
+		File.Delete(destinazione);
+		await db.ExecuteAsync("VACUUM INTO ?", destinazione);
+	}
+
+	// Sostituisce tutto il database con un backup (controllato prima con SpeseNelFile)
+	public async Task SostituisciConAsync(string backup)
+	{
+		// Chiude la connessione condivisa da sqlite-net per questo file, anche se il database attuale non si apriva
+		apertura = null;
+		await new SQLiteAsyncConnection(Percorso).CloseAsync();
+
+		File.Copy(backup, Percorso, overwrite: true);
+		File.Delete(Percorso + "-journal"); // un giornale rimasto dal vecchio database verrebbe applicato al nuovo
+		Ripristinato?.Invoke();
+	}
+
+	// Quante spese contiene un file, oppure null se non è un database di questa app
+	public static int? SpeseNelFile(string file)
+	{
+		try
+		{
+			using var db = new SQLiteConnection(file, SQLiteOpenFlags.ReadOnly);
+			var tabelle = db.QueryScalars<string>("SELECT name FROM sqlite_master WHERE type = 'table'");
+			return tabelle.Contains(nameof(Spesa)) ? db.ExecuteScalar<int>("SELECT COUNT(*) FROM Spesa") : null;
+		}
+		catch (SQLiteException)
+		{
+			return null; // non è un database SQLite
+		}
 	}
 
 	// Il primo colore della palette non ancora usato da nessuna categoria; -1 (grigio) se sono tutti presi

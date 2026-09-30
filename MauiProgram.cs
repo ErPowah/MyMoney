@@ -34,6 +34,7 @@ public static class MauiProgram
 		// Dependency injection: qui si dichiara come creare database, ViewModel e pagine
 		builder.Services.AddSingleton<SpeseDatabase>();
 		builder.Services.AddSingleton<TemaService>();
+		builder.Services.AddSingleton<BackupService>();
 		builder.Services.AddSingleton<ElencoSpeseViewModel>();
 		builder.Services.AddSingleton<ElencoSpesePage>();
 		builder.Services.AddTransient<SpesaViewModel>();

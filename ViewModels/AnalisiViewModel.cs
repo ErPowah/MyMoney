@@ -6,10 +6,17 @@ using DiarioSpese.Services;
 namespace DiarioSpese.ViewModels;
 
 // Scheda "Analisi": totale speso tra due date e grafico delle spese per categoria nello stesso periodo
-public partial class AnalisiViewModel(SpeseDatabase database) : ObservableObject
+public partial class AnalisiViewModel : ObservableObject
 {
+	readonly SpeseDatabase database;
 	int ultimoCalcolo;
 	bool impostandoPeriodo;
+
+	public AnalisiViewModel(SpeseDatabase database)
+	{
+		this.database = database;
+		database.Ripristinato += () => _ = CalcolaAsync();
+	}
 
 	[ObservableProperty]
 	public partial DateTime Dal { get; set; } = Statistiche.PrimoDelMese(DateTime.Today);

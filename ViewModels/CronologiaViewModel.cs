@@ -11,10 +11,18 @@ namespace DiarioSpese.ViewModels;
 // - Colonne: il totale di ogni mese, con un filtro per categoria.
 // - Linee: una linea per categoria (più quella di tutte le categorie insieme), ognuna da mostrare o nascondere.
 // In entrambi i modi, toccando un mese sotto compaiono il suo totale e le sue spese.
-public partial class CronologiaViewModel(SpeseDatabase database) : ObservableObject
+public partial class CronologiaViewModel : ObservableObject
 {
 	public const string TutteLeCategorie = CategorieSpesa.TutteLeCategorie;
 	const int NumeroMesi = 12;
+
+	readonly SpeseDatabase database;
+
+	public CronologiaViewModel(SpeseDatabase database)
+	{
+		this.database = database;
+		database.Ripristinato += () => _ = CaricaAsync();
+	}
 
 	List<Spesa> spese = [];
 	List<(string Nome, int Colore)> categorieCaricate = [];
