@@ -1,0 +1,16 @@
+=== Prima di avviare l'app ===
+  classe=androidx.viewpager.widget.ViewPager  text=''  content-desc='At a glance'  bounds=[83,223][997,496]
+  classe=android.widget.TextView  text='Wed, Sep 30'  content-desc='Wed, Sep 30'  bounds=[83,322][373,384]
+  classe=android.widget.TextView  text='Gmail'  content-desc='Gmail'  bounds=[314,1483][519,1756]
+  classe=android.widget.TextView  text='Photos'  content-desc='Photos'  bounds=[561,1483][766,1756]
+  classe=android.widget.TextView  text='YouTube'  content-desc='YouTube'  bounds=[808,1483][1013,1756]
+  classe=android.view.View  text=''  content-desc='Home'  bounds=[0,128][1080,2337]
+  classe=android.widget.TextView  text='Phone'  content-desc='Phone'  bounds=[83,1873][256,2068]
+  classe=android.widget.TextView  text='Messages'  content-desc='Messages'  bounds=[330,1873][503,2068]
+  classe=android.widget.TextView  text='Chrome'  content-desc='Chrome'  bounds=[577,1873][750,2068]
+  classe=android.widget.TextView  text='Diario Spese'  content-desc='Predicted app: Diario Spese'  bounds=[824,1873][997,2068]
+  classe=android.widget.FrameLayout  text=''  content-desc='Google search'  bounds=[90,2125][990,2290]
+  classe=android.widget.ImageView  text=''  content-desc='Google app'  bounds=[101,2144][227,2270]
+  classe=android.widget.ImageView  text=''  content-desc='Voice search'  bounds=[727,2125][853,2290]
+  classe=android.widget.ImageButton  text=''  content-desc='Google Lens'  bounds=[853,2125][979,2290]
+

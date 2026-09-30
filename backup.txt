@@ -1,0 +1,3 @@
+total 24
+-rwxrwx--- 1 u0_a203 media_rw 20480 2026-09-30 16:32 Diario Spese - backup.db3
+Spese nel backup: 29 (attese 29). Categorie: Alimentari, Altro, Animali, Casa, Regali, Salute, Svago, Trasporti
