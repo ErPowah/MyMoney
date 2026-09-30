@@ -4,7 +4,7 @@
 # Lo esegue il job "anteprima" di .github/workflows/android.yml.
 set -u
 APK="$1"
-PKG=it.diariospese.app
+PKG=it.diariospese.app.debug # la versione Debug ha un identificativo suo, vedi DiarioSpese.csproj
 OUT=anteprima
 ERRORI=0
 mkdir -p "$OUT"

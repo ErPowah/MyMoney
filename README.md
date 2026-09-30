@@ -39,7 +39,9 @@ dotnet build -t:Run -f net10.0-android     # emulatore o telefono Android
 dotnet build -t:Run -f net10.0-ios         # simulatore iOS (solo su Mac)
 ```
 
-Per installarla sul tuo telefono Android senza passare dal Play Store: attiva *Opzioni sviluppatore → Debug USB*, collega il telefono e avvia l'app da Visual Studio. L'app poi resta installata.
+Per provarla sul tuo telefono Android: attiva *Opzioni sviluppatore → Debug USB* e collega il telefono (oppure, senza cavo, *Debug wireless* con `adb pair` e `adb connect`), poi sceglilo dal pulsante ▶ di Visual Studio.
+
+La versione Debug installata da Visual Studio si chiama **Spese DEV** ed è un'app separata da *Diario Spese* scaricata da GitHub, con dati suoi. Serve a proteggere le spese vere: le due versioni sono firmate con chiavi diverse, e Android non lascia installare una sopra l'altra se non disinstallando prima la vecchia, cosa che ne cancella i dati.
 
 ## Provarla sul telefono Android, senza PC
 
