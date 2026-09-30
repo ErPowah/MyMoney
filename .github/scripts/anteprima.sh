@@ -64,14 +64,26 @@ for nodo in radice.iter("node"):
 }
 
 # Sugli emulatori di GitHub capita che un'app di sistema (di solito il launcher) smetta di rispondere:
-# Android copre lo schermo con "... isn't responding". Si tocca "Wait" e si va avanti.
+# Android copre lo schermo con "... isn't responding". Al primo blocco si salva il motivo registrato da
+# Android (blocco.txt) e il logcat, poi si chiude l'app bloccata; se continua, si interrompe con i log.
+BLOCCHI=0
 chiudi_blocco() {
   local punto
-  punto=$(trova "Wait")
-  [ -n "$punto" ] && [ -n "$(trova "Close app")" ] || return 1
-  echo "::notice title=Anteprima::Chiuso l'avviso di un'app di sistema che non rispondeva"
+  punto=$(trova "Close app")
+  [ -n "$punto" ] && [ -n "$(trova "Wait")" ] || return 1
+  BLOCCHI=$((BLOCCHI + 1))
+  if [ $BLOCCHI -eq 1 ]; then
+    { adb shell dumpsys activity lastanr; adb shell dumpsys activity lastanr-traces | head -c 3000000; } > "$OUT/blocco.txt" 2>&1
+    adb logcat -d > "$OUT/logcat-blocco.txt"
+  fi
+  if [ $BLOCCHI -gt 5 ]; then
+    echo "::error title=Anteprima::Un'app di sistema continua a bloccarsi: interrompo, vedi blocco.txt"
+    adb logcat -d > "$OUT/logcat.txt"
+    exit 1
+  fi
+  echo "::notice title=Anteprima::Chiusa un'app di sistema che non rispondeva"
   adb shell input tap $punto
-  sleep 3
+  sleep 5
 }
 
 aspetta() {
@@ -140,6 +152,14 @@ adb shell run-as $PKG ls -l files
 
 adb logcat -c
 adb shell cmd uimode night no
+
+# Com'è il sistema prima di avviare l'app: se qualcosa è già bloccato qui, non dipende dall'app
+sleep 20
+adb shell getprop ro.build.fingerprint > "$OUT/sistema.txt"
+adb shell dumpsys activity lastanr >> "$OUT/sistema.txt" 2>&1
+foto 00-prima-dell-app
+diagnostica "Prima di avviare l'app"
+
 adb shell monkey -p $PKG -c android.intent.category.LAUNCHER 1
 
 aspetta "+ Nuova spesa" && sleep 3
