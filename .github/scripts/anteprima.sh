@@ -63,9 +63,21 @@ for nodo in radice.iter("node"):
   } >> "$OUT/diagnostica.txt"
 }
 
+# Sugli emulatori di GitHub capita che un'app di sistema (di solito il launcher) smetta di rispondere:
+# Android copre lo schermo con "... isn't responding". Si tocca "Wait" e si va avanti.
+chiudi_blocco() {
+  local punto
+  punto=$(trova "Wait")
+  [ -n "$punto" ] && [ -n "$(trova "Close app")" ] || return 1
+  echo "::notice title=Anteprima::Chiuso l'avviso di un'app di sistema che non rispondeva"
+  adb shell input tap $punto
+  sleep 3
+}
+
 aspetta() {
-  for _ in $(seq 1 45); do
+  for i in $(seq 1 45); do
     [ -n "$(trova "$1")" ] && return 0
+    [ $((i % 5)) -eq 0 ] && chiudi_blocco
     sleep 2
   done
   echo "::warning title=Anteprima::Non trovo \"$1\" sullo schermo"
@@ -77,6 +89,9 @@ aspetta() {
 tocca() {
   local punto
   punto=$(trova "$@")
+  if [ -z "$punto" ] && chiudi_blocco; then
+    punto=$(trova "$@")
+  fi
   if [ -n "$punto" ]; then
     adb shell input tap $punto
     sleep 3
