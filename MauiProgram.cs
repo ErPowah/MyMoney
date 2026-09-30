@@ -28,7 +28,13 @@ public static class MauiProgram
 			});
 
 #pragma warning disable CA1416 // il progetto compila solo per le piattaforme che UseMauiCommunityToolkit supporta
-		builder.UseMauiCommunityToolkit(); // per la finestra delle Impostazioni (CommunityToolkit.Maui.Views.Popup)
+		builder.UseMauiCommunityToolkit(opzioni => // per la finestra delle Impostazioni (CommunityToolkit.Maui.Views.Popup)
+		{
+			// La finestra disegna da sé il suo riquadro, con i colori del tema chiaro o scuro: il contenitore
+			// del toolkit (bianco, con bordo e ombra) resta invisibile, altrimenti nel tema scuro fa da cornice bianca
+			opzioni.SetPopupDefaults(new DefaultPopupSettings { BackgroundColor = Colors.Transparent, Padding = new Thickness(0) });
+			opzioni.SetPopupOptionsDefaults(new DefaultPopupOptionsSettings { Shape = null, Shadow = null });
+		});
 #pragma warning restore CA1416
 
 		// Dependency injection: qui si dichiara come creare database, ViewModel e pagine
